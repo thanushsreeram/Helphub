@@ -1,0 +1,83 @@
+.avatar-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-preview-box {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 3px solid #6366f1;
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.18);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-preview-box:hover {
+  border-color: #4f46e5;
+  transform: scale(1.03);
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.28);
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-camera-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: #6366f1;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: 0.2s ease;
+}
+
+.avatar-preview-box:hover .avatar-camera-badge {
+  background: #4f46e5;
+  transform: scale(1.1);
+}
+
+.avatar-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.avatar-remove-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}

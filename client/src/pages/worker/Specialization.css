@@ -1,0 +1,579 @@
+.specialization-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  color: #172033;
+}
+
+/* HEADER */
+
+.specialization-header {
+  height: 76px;
+  background: #ffffff;
+  border-bottom: 1px solid #e8ebf2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 7%;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #111827;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.brand h1 span {
+  color: #4f46e5;
+}
+
+.brand p {
+  margin: 2px 0 0;
+  color: #8a93a5;
+  font-size: 11px;
+}
+
+.back-dashboard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e1e5ec;
+  background: #ffffff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #374151;
+  transition: 0.2s;
+}
+
+.back-dashboard:hover {
+  background: #f8f9fc;
+  border-color: #cfd5e1;
+}
+
+/* MAIN */
+
+.specialization-container {
+  width: min(1050px, 90%);
+  margin: 0 auto;
+  padding: 55px 0 80px;
+}
+
+/* HERO */
+
+.specialization-hero {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 32px;
+}
+
+.hero-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: #111827;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.eyebrow {
+  margin: 0 0 7px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #6366f1;
+}
+
+.specialization-hero h2 {
+  margin: 0;
+  font-size: 31px;
+  letter-spacing: -1px;
+}
+
+.hero-description {
+  margin: 8px 0 0;
+  color: #737d91;
+  max-width: 650px;
+  line-height: 1.6;
+}
+
+/* CARD */
+
+.specialization-card {
+  background: white;
+  border: 1px solid #e6e9ef;
+  border-radius: 20px;
+  box-shadow: 0 10px 35px rgba(20, 30, 55, 0.06);
+  padding: 30px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.card-header p {
+  margin: 5px 0 0;
+  color: #8a93a5;
+  font-size: 14px;
+}
+
+.selected-count {
+  background: #eef2ff;
+  color: #4f46e5;
+  padding: 8px 13px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* SERVICES */
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.service-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 20px;
+  border: 1.5px solid #e5e8ef;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.service-card:hover {
+  border-color: #aeb4c5;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(30, 40, 70, 0.06);
+}
+
+.service-card.selected {
+  border-color: #6366f1;
+  background: #f8f8ff;
+}
+
+.service-card input {
+  display: none;
+}
+
+.service-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: #f1f3f7;
+  color: #596174;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.service-card.selected .service-icon {
+  background: #6366f1;
+  color: white;
+}
+
+.service-content {
+  flex: 1;
+}
+
+.service-content h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.service-content p {
+  margin: 0 0 10px;
+  color: #7d8698;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.service-content span {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7c8495;
+  background: #f1f3f7;
+  padding: 5px 9px;
+  border-radius: 6px;
+}
+
+.check-circle {
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  border: 1.5px solid #d4d8e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.service-card.selected .check-circle {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+
+/* SAVE */
+
+.save-area {
+  margin-top: 28px;
+  padding-top: 23px;
+  border-top: 1px solid #eceef3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.save-area strong {
+  font-size: 14px;
+}
+
+.save-area p {
+  margin: 4px 0 0;
+  color: #9299a8;
+  font-size: 12px;
+}
+
+.save-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: none;
+  background: #111827;
+  color: white;
+  padding: 13px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.save-button:hover {
+  background: #252d3d;
+  transform: translateY(-1px);
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* MESSAGES */
+
+.specialization-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 13px 15px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.specialization-error {
+  margin-top: 20px;
+  padding: 13px 15px;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #be123c;
+  font-size: 14px;
+}
+
+.loading-state {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #7d8698;
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-state {
+  text-align: center;
+  padding: 50px;
+  color: #be123c;
+}
+
+.error-state button {
+  margin-top: 10px;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 700px) {
+  .specialization-header {
+    padding: 0 5%;
+  }
+
+  .specialization-container {
+    width: 92%;
+    padding-top: 35px;
+  }
+
+  .specialization-hero h2 {
+    font-size: 25px;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .save-area {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .save-button {
+    justify-content: center;
+  }
+
+  .specialization-card {
+    padding: 20px;
+  }
+}
+
+/* =========================================
+   SPECIALIZATION UI POLISH
+========================================= */
+
+.service-card {
+  overflow: hidden;
+}
+
+.service-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+
+  background: transparent;
+
+  transition: background 0.2s ease;
+}
+
+.service-card.selected::before {
+  background: #6366f1;
+}
+
+.service-card.selected {
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
+}
+
+.service-card.selected .service-content h4 {
+  color: #3730a3;
+}
+
+.service-card.selected .service-content span {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.check-circle {
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.service-card:hover .check-circle {
+  transform: scale(1.05);
+}
+
+.service-card.selected .check-circle {
+  transform: scale(1.08);
+}
+
+
+/* SAVE BUTTON IMPROVEMENT */
+
+.save-button {
+  min-width: 205px;
+  justify-content: center;
+  box-shadow: 0 5px 15px rgba(17, 24, 39, 0.12);
+}
+
+.save-button:hover:not(:disabled) {
+  box-shadow: 0 7px 20px rgba(17, 24, 39, 0.16);
+}
+
+.save-button:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+
+/* SELECTED COUNT */
+
+.selected-count {
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.selected-count:hover {
+  transform: translateY(-1px);
+}
+
+
+/* BETTER ERROR BUTTON */
+
+.error-state button {
+  background: #111827;
+  color: #ffffff;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.error-state button:hover {
+  background: #252d3d;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================
+   MOBILE POLISH
+========================================= */
+
+@media (max-width: 700px) {
+  .specialization-hero {
+    align-items: flex-start;
+  }
+
+  .hero-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 15px;
+  }
+
+  .specialization-hero {
+    gap: 15px;
+  }
+
+  .card-header {
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .service-card {
+    padding: 17px;
+  }
+
+  .service-content p {
+    line-height: 1.45;
+  }
+}
+
+@media (max-width: 450px) {
+  .specialization-header {
+    height: auto;
+    min-height: 70px;
+    padding: 12px 5%;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .brand h1 {
+    font-size: 19px;
+  }
+
+  .back-dashboard {
+    padding: 9px 11px;
+    font-size: 13px;
+  }
+
+  .specialization-hero {
+    flex-direction: column;
+  }
+
+  .specialization-card {
+    padding: 16px;
+    border-radius: 15px;
+  }
+
+  .card-header {
+    flex-direction: column;
+  }
+
+  .selected-count {
+    align-self: flex-start;
+  }
+
+  .service-card {
+    gap: 10px;
+  }
+
+  .service-icon {
+    width: 40px;
+    height: 40px;
+  }
+}

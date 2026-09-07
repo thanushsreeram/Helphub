@@ -1,0 +1,52 @@
+.verify-email-card {
+  max-width: 520px;
+  text-align: center;
+}
+
+.verify-state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.verify-icon {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.success-icon {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.error-icon {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.verify-state-box h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.verify-state-box p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.enter-app-btn {
+  width: 100%;
+  margin-top: 15px;
+  background: #2563eb;
+}
