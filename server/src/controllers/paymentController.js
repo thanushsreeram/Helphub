@@ -3,9 +3,12 @@ import pool from "../config/database.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
+const razorpayKeyId = process.env.RAZORPAY_KEY_ID || "rzp_test_TX8UhLHvW0r4ou";
+const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET || "OjXRV73PHqeznOPbkYBkHb7c";
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+  key_id: razorpayKeyId,
+  key_secret: razorpayKeySecret,
 });
 
 /*
@@ -122,7 +125,7 @@ export const createRazorpayOrder = async (req, res) => {
         currency: order.currency,
         receipt: order.receipt,
       },
-      key_id: process.env.RAZORPAY_KEY_ID,
+      key_id: razorpayKeyId,
     });
   } catch (error) {
     console.error("Create Razorpay order error:", {
@@ -199,7 +202,7 @@ export const verifyRazorpayPayment = async (req, res) => {
     const generatedSignature = crypto
       .createHmac(
         "sha256",
-        process.env.RAZORPAY_KEY_SECRET
+        razorpayKeySecret
       )
       .update(
         `${razorpay_order_id}|${razorpay_payment_id}`
@@ -264,8 +267,6 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     try {
       await dbClient.query("BEGIN");
-      // Serialize writes per booking until a database uniqueness constraint is
-      // available through a migration.
       await dbClient.query("SELECT pg_advisory_xact_lock($1)", [bookingId]);
 
       const existingPayment = await dbClient.query(
