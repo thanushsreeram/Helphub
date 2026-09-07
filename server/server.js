@@ -17,28 +17,8 @@ import reviewRoutes from "./src/routes/reviewRoutes.js";
 
 dotenv.config();
 
-// Multi-Core Cluster Management for High Concurrency (100+ Concurrent Users)
-const numCPUs = Math.min(os.cpus().length, 4);
-const isMaster = cluster.isPrimary || cluster.isMaster;
-
-if (isMaster && process.env.NODE_ENV === "production") {
-  console.log(`⚡ Primary cluster manager running (PID: ${process.pid}). Forking ${numCPUs} worker processes...`);
-
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  cluster.on("exit", (worker, code, signal) => {
-    console.warn(`⚠️ Worker process ${worker.process.pid} died (code: ${code}, signal: ${signal}). Spawning replacement process...`);
-    cluster.fork();
-  });
-} else {
-  startWorkerServer();
-}
-
-function startWorkerServer() {
+export function createApp() {
   const app = express();
-  const PORT = process.env.PORT || 5000;
 
   // 1. CORS MUST BE FIRST (Prevents "Failed to fetch" browser errors)
   app.use(
@@ -58,7 +38,7 @@ function startWorkerServer() {
 
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: isProd ? 300 : 5000, // Generous limit for dev to prevent "Failed to fetch"
+    max: isProd ? 300 : 5000,
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -86,7 +66,7 @@ function startWorkerServer() {
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-  // 5. In-Memory Micro-Cache for Services Endpoint (Zero DB hits under high load)
+  // 5. In-Memory Micro-Cache for Services Endpoint
   let cachedServices = null;
   let cacheExpiry = 0;
 
@@ -106,7 +86,7 @@ function startWorkerServer() {
       );
 
       cachedServices = result.rows;
-      cacheExpiry = now + 60000; // Cache for 60 seconds
+      cacheExpiry = now + 60000;
 
       return res.json({
         success: true,
@@ -148,7 +128,7 @@ function startWorkerServer() {
     }
   });
 
-  // 7. Global Error Handler Middleware (Prevents server crashes on unhandled route errors)
+  // 7. Global Error Handler Middleware
   app.use((err, req, res, next) => {
     console.error(`❌ [PID ${process.pid}] Unhandled Request Error:`, err);
     res.status(err.status || 500).json({
@@ -157,19 +137,42 @@ function startWorkerServer() {
     });
   });
 
-  // 8. Start HTTP Server
-  const server = app.listen(PORT, () => {
-    console.log(`🚀 HelpHub server [PID ${process.pid}] running on http://localhost:${PORT}`);
-  });
+  return app;
+}
 
-  // Graceful shutdown
-  process.on("SIGTERM", () => {
-    console.log("SIGTERM signal received. Closing HTTP server...");
-    server.close(() => {
-      console.log("HTTP server closed.");
-      pool.end();
+const app = createApp();
+export default app;
+
+// Standalone Server & Multi-Core Cluster Setup (for Node / Render / Local execution)
+if (!process.env.VERCEL) {
+  const numCPUs = Math.min(os.cpus().length, 4);
+  const isMaster = cluster.isPrimary || cluster.isMaster;
+
+  if (isMaster && process.env.NODE_ENV === "production") {
+    console.log(`⚡ Primary cluster manager running (PID: ${process.pid}). Forking ${numCPUs} worker processes...`);
+
+    for (let i = 0; i < numCPUs; i++) {
+      cluster.fork();
+    }
+
+    cluster.on("exit", (worker, code, signal) => {
+      console.warn(`⚠️ Worker process ${worker.process.pid} died. Spawning replacement process...`);
+      cluster.fork();
     });
-  });
+  } else {
+    const PORT = process.env.PORT || 5000;
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 HelpHub server [PID ${process.pid}] running on http://localhost:${PORT}`);
+    });
+
+    process.on("SIGTERM", () => {
+      console.log("SIGTERM signal received. Closing HTTP server...");
+      server.close(() => {
+        console.log("HTTP server closed.");
+        pool.end();
+      });
+    });
+  }
 }
 
 // Global Process Anti-Crash Handlers

@@ -2,5 +2,9 @@
   "name": "helphub",
   "version": "1.0.0",
   "private": true,
-  "description": "HelpHub - Local Services and Worker Booking Platform"
+  "description": "HelpHub - Local Services and Worker Booking Platform",
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "start": "cd server && npm start"
+  }
 }

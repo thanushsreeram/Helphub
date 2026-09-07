@@ -5,13 +5,21 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const pool = new Pool({
+const isCloudDb = process.env.NODE_ENV === "production" || process.env.VERCEL || (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("localhost"));
+
+const poolConfig = {
   connectionString: process.env.DATABASE_URL,
   max: 50, // Up to 50 active DB connections for concurrent requests
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
   connectionTimeoutMillis: 5000, // Return error if connection is not acquired within 5 seconds
   statement_timeout: 10000, // Cancel query if it runs longer than 10 seconds
-});
+};
+
+if (isCloudDb && process.env.DATABASE_URL) {
+  poolConfig.ssl = { rejectUnauthorized: false };
+}
+
+const pool = new Pool(poolConfig);
 
 pool.on("connect", () => {
   // Silent or debug log for pool connection

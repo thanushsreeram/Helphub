@@ -75,3 +75,4 @@ function AvatarUpload({ value, onChange, size = 110 }) {
 }
 
 export default AvatarUpload;
+//thanush
