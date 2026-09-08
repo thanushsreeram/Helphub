@@ -20,6 +20,8 @@ dotenv.config();
 export function createApp() {
   const app = express();
 
+  app.set("trust proxy", 1);
+
   // 1. CORS MUST BE FIRST (Prevents "Failed to fetch" browser errors)
   app.use(
     cors({
@@ -27,7 +29,7 @@ export function createApp() {
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    })
+    }),
   );
 
   // 2. Response Compression (Reduces network payload bandwidth by up to 80%)
@@ -43,7 +45,8 @@ export function createApp() {
     legacyHeaders: false,
     message: {
       success: false,
-      message: "Too many requests from this IP, please try again after 15 minutes.",
+      message:
+        "Too many requests from this IP, please try again after 15 minutes.",
     },
   });
 
@@ -82,7 +85,7 @@ export function createApp() {
       }
 
       const result = await pool.query(
-        "SELECT id, name, description, category FROM services ORDER BY id"
+        "SELECT id, name, description, category FROM services ORDER BY id",
       );
 
       cachedServices = result.rows;
@@ -149,20 +152,26 @@ if (!process.env.VERCEL) {
   const isMaster = cluster.isPrimary || cluster.isMaster;
 
   if (isMaster && process.env.NODE_ENV === "production") {
-    console.log(`⚡ Primary cluster manager running (PID: ${process.pid}). Forking ${numCPUs} worker processes...`);
+    console.log(
+      `⚡ Primary cluster manager running (PID: ${process.pid}). Forking ${numCPUs} worker processes...`,
+    );
 
     for (let i = 0; i < numCPUs; i++) {
       cluster.fork();
     }
 
     cluster.on("exit", (worker, code, signal) => {
-      console.warn(`⚠️ Worker process ${worker.process.pid} died. Spawning replacement process...`);
+      console.warn(
+        `⚠️ Worker process ${worker.process.pid} died. Spawning replacement process...`,
+      );
       cluster.fork();
     });
   } else {
     const PORT = process.env.PORT || 5000;
     const server = app.listen(PORT, () => {
-      console.log(`🚀 HelpHub server [PID ${process.pid}] running on http://localhost:${PORT}`);
+      console.log(
+        `🚀 HelpHub server [PID ${process.pid}] running on http://localhost:${PORT}`,
+      );
     });
 
     process.on("SIGTERM", () => {
@@ -181,5 +190,10 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at promise:", promise, "reason:", reason);
+  console.error(
+    "❌ Unhandled Rejection at promise:",
+    promise,
+    "reason:",
+    reason,
+  );
 });
