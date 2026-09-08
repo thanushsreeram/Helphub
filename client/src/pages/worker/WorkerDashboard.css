@@ -923,3 +923,242 @@
     padding: 9px 11px;
   }
 }
+/* =========================================================
+   RATE CLIENT BUTTON
+========================================================= */
+
+.rate-client-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 40px;
+
+  padding: 9px 16px;
+
+  background: #ffffff;
+  color: #374151;
+
+  border: 1px solid #d9dee8;
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 2px 6px rgba(20, 30, 50, 0.04);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.rate-client-button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+.rate-client-button:hover {
+  background: #fffbeb;
+  color: #b45309;
+
+  border-color: #fbbf24;
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 5px 14px rgba(245, 158, 11, 0.12);
+}
+
+.rate-client-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(20, 30, 50, 0.06);
+}
+
+.rate-client-button:focus-visible {
+  outline: 3px solid rgba(245, 158, 11, 0.2);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   RATE + VIEW DETAILS BUTTON GROUP
+========================================================= */
+
+.booking-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+/* Rate button takes slightly less space */
+.booking-card-actions .rate-client-button {
+  flex: 0 0 auto;
+}
+
+/* =========================================================
+   VIEW DETAILS BUTTON
+========================================================= */
+
+.view-details-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  min-height: 40px;
+
+  padding: 9px 17px;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  border: 1px solid #2563eb;
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.view-details-button:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.2);
+}
+
+.view-details-button:active {
+  transform: translateY(0);
+}
+
+.view-details-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .booking-card-actions {
+    width: 100%;
+  }
+
+  .rate-client-button,
+  .view-details-button {
+    flex: 1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .booking-card-actions {
+    flex-direction: column;
+  }
+
+  .rate-client-button,
+  .view-details-button {
+    width: 100%;
+  }
+}
+/* =========================================================
+   IMPROVED BOOKING INFORMATION
+========================================================= */
+
+.booking-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 12px;
+}
+
+.booking-title-row h3 {
+  flex: 1;
+  min-width: 0;
+
+  margin: 0;
+}
+
+.booking-title-row .status {
+  flex-shrink: 0;
+}
+
+.booking-info > p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin: 7px 0;
+}
+
+.booking-info > p svg {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.booking-info > p strong {
+  color: #4b5563;
+  font-weight: 700;
+}
+
+.booking-price {
+  display: block;
+
+  margin-bottom: 2px;
+
+  font-size: 20px;
+  font-weight: 800;
+
+  color: #172033;
+}
+
+.pending-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 8px 10px;
+
+  border-radius: 9px;
+
+  background: #fff7ed;
+  color: #c2410c;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .booking-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .booking-title-row .status {
+    align-self: flex-start;
+  }
+}

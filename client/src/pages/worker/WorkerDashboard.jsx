@@ -415,177 +415,213 @@ function WorkerDashboard() {
           ) : (
             <div className="booking-list">
               {bookings.map((booking) => (
-                <div className="booking-card" key={booking.id}>
-                  {/* LEFT */}
-                  <div className="booking-info">
-                    <h3>{booking.service_name}</h3>
+              <div className="booking-card" key={booking.id}>
+  {/* BOOKING INFORMATION */}
+  <div className="booking-info">
+    <div className="booking-title-row">
+      <h3>{booking.service_name}</h3>
 
-                    <p>Client: {booking.client_name}</p>
+      <span className={`status status-${booking.status}`}>
+        {booking.status.replace("_", " ")}
+      </span>
+    </div>
 
-                    <p>Location: {booking.location}</p>
+    <p>
+      <User size={14} />
+      <span>
+        <strong>Client:</strong> {booking.client_name}
+      </span>
+    </p>
 
-                    <p>
-                      Date:{" "}
-                      {new Date(booking.booking_date).toLocaleString("en-IN")}
-                    </p>
+    <p>
+      <Wrench size={14} />
+      <span>
+        <strong>Location:</strong> {booking.location}
+      </span>
+    </p>
 
-                    {booking.description && (
-                      <p className="booking-description">
-                        {booking.description}
-                      </p>
-                    )}
-                  </div>
+    <p>
+      <CalendarDays size={14} />
+      <span>
+        <strong>Date:</strong>{" "}
+        {new Date(booking.booking_date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}
+      </span>
+    </p>
 
-                  {/* RIGHT */}
-                  <div className="booking-right">
-                    <strong>
-                      ₹{Number(booking.total_cost || 0).toFixed(2)}
-                    </strong>
+    <p>
+      <Clock size={14} />
+      <span>
+        <strong>Time:</strong>{" "}
+        {new Date(booking.booking_date).toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </span>
+    </p>
 
-                    <span className={`status status-${booking.status}`}>
-                      {booking.status.replace("_", " ")}
-                    </span>
+    {booking.description && (
+      <p className="booking-description">
+        {booking.description}
+      </p>
+    )}
+  </div>
 
-                    {/* ACCEPT / REJECT */}
-                    {booking.status === "pending" && (
-                      <div className="booking-actions">
-                        <button
-                          className="accept-booking-button"
-                          onClick={() => handleAccept(booking.id)}
-                          disabled={actionLoading === booking.id}
-                        >
-                          <Check size={17} />
+  {/* BOOKING ACTIONS / PRICE */}
+  <div className="booking-right">
+    <strong className="booking-price">
+      ₹{Number(booking.total_cost || 0).toFixed(2)}
+    </strong>
 
-                          {actionLoading === booking.id
-                            ? "Processing..."
-                            : "Accept"}
-                        </button>
+    {/* PENDING */}
+    {booking.status === "pending" && (
+      <>
+        <div className="booking-status-label pending-label">
+          <Clock size={15} />
+          Waiting for Action
+        </div>
 
-                        <button
-                          className="reject-booking-button"
-                          onClick={() =>
-                            openActionModal(
-                              booking.id,
-                              "reject",
-                              "Reject Booking",
-                              "Are you sure you want to reject this booking?",
-                              "Reject",
-                              "danger",
-                            )
-                          }
-                          disabled={actionLoading === booking.id}
-                        >
-                          <X size={17} />
-                          Reject
-                        </button>
-                      </div>
-                    )}
+        <div className="booking-actions">
+          <button
+            className="accept-booking-button"
+            onClick={() => handleAccept(booking.id)}
+            disabled={actionLoading === booking.id}
+          >
+            <Check size={17} />
 
-                    {/* COMMITTED */}
-                    {/* ACCEPTED */}
-                    {booking.status === "accepted" && (
-                      <div className="booking-actions">
-                        <div className="booking-accepted-label">
-                          <CheckCircle size={17} />
-                          Booking Accepted
-                        </div>
+            {actionLoading === booking.id
+              ? "Processing..."
+              : "Accept"}
+          </button>
 
-                        <button
-                          type="button"
-                          className="commit-button"
-                          onClick={() =>
-                            openActionModal(
-                              booking.id,
-                              "commit",
-                              "Commit to Job",
-                              "Are you ready to commit to this job?",
-                              "Commit to Job",
-                              "primary",
-                            )
-                          }
-                          disabled={actionLoading === booking.id}
-                        >
-                          <CheckCircle size={17} />
+          <button
+            className="reject-booking-button"
+            onClick={() =>
+              openActionModal(
+                booking.id,
+                "reject",
+                "Reject Booking",
+                "Are you sure you want to reject this booking?",
+                "Reject",
+                "danger",
+              )
+            }
+            disabled={actionLoading === booking.id}
+          >
+            <X size={17} />
+            Reject
+          </button>
+        </div>
+      </>
+    )}
 
-                          {actionLoading === booking.id
-                            ? "Committing..."
-                            : "Commit to Job"}
-                        </button>
-                      </div>
-                    )}
+    {/* ACCEPTED */}
+    {booking.status === "accepted" && (
+      <div className="booking-actions">
+        <div className="booking-accepted-label">
+          <CheckCircle size={17} />
+          Booking Accepted
+        </div>
 
-                    {/* COMMITTED */}
-                    {booking.status === "committed" && (
-                      <div className="booking-actions">
-                        <div className="booking-accepted-label">
-                          <CheckCircle size={17} />
-                          Booking Committed
-                        </div>
+        <button
+          type="button"
+          className="commit-button"
+          onClick={() =>
+            openActionModal(
+              booking.id,
+              "commit",
+              "Commit to Job",
+              "Are you ready to commit to this job?",
+              "Commit to Job",
+              "primary",
+            )
+          }
+          disabled={actionLoading === booking.id}
+        >
+          <CheckCircle size={17} />
 
-                        <button
-                          type="button"
-                          className="start-job-button"
-                          onClick={() =>
-                            openActionModal(
-                              booking.id,
-                              "start",
-                              "Start Job",
-                              "Are you ready to start this job?",
-                              "Start Job",
-                              "primary",
-                            )
-                          }
-                          disabled={actionLoading === booking.id}
-                        >
-                          <Play size={17} />
+          {actionLoading === booking.id
+            ? "Committing..."
+            : "Commit to Job"}
+        </button>
+      </div>
+    )}
 
-                          {actionLoading === booking.id
-                            ? "Starting..."
-                            : "Start Job"}
-                        </button>
-                      </div>
-                    )}
+    {/* COMMITTED */}
+    {booking.status === "committed" && (
+      <div className="booking-actions">
+        <div className="booking-accepted-label">
+          <CheckCircle size={17} />
+          Booking Committed
+        </div>
 
-                    {/* IN PROGRESS */}
-                    {booking.status === "in_progress" && (
-                      <div className="booking-actions">
-                        <div className="job-progress-label">
-                          <Clock size={17} />
-                          Job In Progress
-                        </div>
+        <button
+          type="button"
+          className="start-job-button"
+          onClick={() =>
+            openActionModal(
+              booking.id,
+              "start",
+              "Start Job",
+              "Are you ready to start this job?",
+              "Start Job",
+              "primary",
+            )
+          }
+          disabled={actionLoading === booking.id}
+        >
+          <Play size={17} />
 
-                        <button
-                          className="complete-job-button"
-                          onClick={() =>
-                            openActionModal(
-                              booking.id,
-                              "complete",
-                              "Complete Job",
-                              "Are you sure you want to mark this job as completed?",
-                              "Complete Job",
-                              "success",
-                            )
-                          }
-                          disabled={actionLoading === booking.id}
-                        >
-                          <CheckCircle size={17} />
+          {actionLoading === booking.id
+            ? "Starting..."
+            : "Start Job"}
+        </button>
+      </div>
+    )}
 
-                          {actionLoading === booking.id
-                            ? "Completing..."
-                            : "Complete Job"}
-                        </button>
-                      </div>
-                    )}
+    {/* IN PROGRESS */}
+    {booking.status === "in_progress" && (
+      <div className="booking-actions">
+        <div className="job-progress-label">
+          <Clock size={17} />
+          Job In Progress
+        </div>
 
-                    {/* COMPLETED */}
-                    {booking.status === "completed" && (
-                      <div className="job-completed-label">
-                        <CheckCircle size={17} />
-                        Job Completed
-                      </div>
-                    )}
-                  </div>
-                </div>
+        <button
+          className="complete-job-button"
+          onClick={() =>
+            openActionModal(
+              booking.id,
+              "complete",
+              "Complete Job",
+              "Are you sure you want to mark this job as completed?",
+              "Complete Job",
+              "success",
+            )
+          }
+          disabled={actionLoading === booking.id}
+        >
+          <CheckCircle size={17} />
+
+          {actionLoading === booking.id
+            ? "Completing..."
+            : "Complete Job"}
+        </button>
+      </div>
+    )}
+
+    {/* COMPLETED */}
+    {booking.status === "completed" && (
+      <div className="job-completed-label">
+        <CheckCircle size={17} />
+        Job Completed
+      </div>
+    )}
+  </div>
+</div>
               ))}
             </div>
           )}
