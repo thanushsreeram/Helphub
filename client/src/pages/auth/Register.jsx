@@ -12,7 +12,6 @@ import {
 import { useState } from "react";
 import { API_URL } from "../../services/api";
 import LanguageSelector from "../../components/common/LanguageSelector";
-import { useLanguage } from "../../context/LanguageContext";
 import { handleLogoClick } from "../../utils/navigation";
 
 import "../../App.css";
@@ -20,8 +19,6 @@ import "../../App.css";
 function Register() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
-
   const selectedRole = searchParams.get("role") || "client";
 
   const [formData, setFormData] = useState({
@@ -96,8 +93,8 @@ function Register() {
       localStorage.setItem("helphub_registered_email", formData.email);
       setRegisteredInfo({
         email: formData.email,
-        token: data.verification_token,
-        link: data.verification_link,
+        token: data.verification_token || null,
+        link: data.verification_link || null,
       });
     } catch (requestError) {
       setError(requestError.message || "Unable to create your account.");
@@ -111,40 +108,104 @@ function Register() {
   if (registeredInfo) {
     return (
       <div className="auth-page">
-        <div className="auth-card" style={{ textAlign: "center", maxWidth: "520px" }}>
+        <div
+          className="auth-card"
+          style={{ textAlign: "center", maxWidth: "520px" }}
+        >
           <Link to="/" className="auth-logo">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub Logo" style={{ height: "48px", objectFit: "contain" }} />
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub Logo"
+              style={{ height: "48px", objectFit: "contain" }}
+            />
           </Link>
 
-          <div style={{ width: "70px", height: "70px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+          <div
+            style={{
+              width: "70px",
+              height: "70px",
+              borderRadius: "50%",
+              background: "#eff6ff",
+              color: "#2563eb",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+            }}
+          >
             <Mail size={36} />
           </div>
 
-          <h2 style={{ fontSize: "24px", fontWeight: "800", margin: "0 0 10px", color: "#0f172a" }}>
+          <h2
+            style={{
+              fontSize: "24px",
+              fontWeight: "800",
+              margin: "0 0 10px",
+              color: "#0f172a",
+            }}
+          >
             Verify your email address 📧
           </h2>
 
-          <p style={{ color: "#64748b", fontSize: "14px", lineHeight: "1.6", margin: "0 0 24px" }}>
-            We've sent a verification email to <strong>{registeredInfo.email}</strong>. Please check your inbox and click the verification link to activate your account.
+          <p
+            style={{
+              color: "#64748b",
+              fontSize: "14px",
+              lineHeight: "1.6",
+              margin: "0 0 24px",
+            }}
+          >
+            We've sent a verification email to{" "}
+            <strong>{registeredInfo.email}</strong>. Please check your inbox and
+            click the verification link to activate your account.
           </p>
 
-          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", marginBottom: "24px", textAlign: "left" }}>
-            <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Simulated Inbox Email Link
-            </span>
-
-            <p style={{ fontSize: "13px", color: "#334155", margin: "8px 0 14px", wordBreak: "break-all" }}>
-              {registeredInfo.link || `http://localhost:5173/verify-email?token=${registeredInfo.token}`}
-            </p>
-
-            <button
-              className="auth-submit"
-              onClick={() => navigate(`/verify-email?token=${registeredInfo.token}`)}
-              style={{ width: "100%", margin: 0 }}
+          {registeredInfo.token && (
+            <div
+              style={{
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: "14px",
+                padding: "20px",
+                marginBottom: "24px",
+                textAlign: "left",
+              }}
             >
-              ✉️ Click Here to Verify Email & Enter HelpHub <ArrowRight size={18} />
-            </button>
-          </div>
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                }}
+              >
+                Simulated Inbox Email Link
+              </span>
+
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#334155",
+                  margin: "8px 0 14px",
+                  wordBreak: "break-all",
+                }}
+              >
+                {registeredInfo.link}
+              </p>
+
+              <button
+                className="auth-submit"
+                onClick={() =>
+                  navigate(`/verify-email?token=${registeredInfo.token}`)
+                }
+                style={{ width: "100%", margin: 0 }}
+              >
+                ✉️ Click Here to Verify Email & Enter HelpHub{" "}
+                <ArrowRight size={18} />
+              </button>
+            </div>
+          )}
 
           <div className="auth-footer" style={{ marginTop: 0 }}>
             Already verified? <Link to="/login">Go to Login</Link>
@@ -157,10 +218,26 @@ function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: "15px" }}>
-          <div onClick={() => handleLogoClick(navigate)} className="auth-logo" style={{ margin: 0, cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub Logo" style={{ height: "48px", objectFit: "contain" }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+            marginBottom: "15px",
+          }}
+        >
+          <div
+            onClick={() => handleLogoClick(navigate)}
+            className="auth-logo"
+            style={{ margin: 0, cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub Logo"
+              style={{ height: "48px", objectFit: "contain" }}
+            />
           </div>
           <LanguageSelector />
         </div>
@@ -190,7 +267,6 @@ function Register() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-
           <div className="form-group">
             <label>Full name</label>
 
@@ -289,11 +365,7 @@ function Register() {
             </div>
           </div>
 
-          {error && (
-            <div className="form-error">
-              {error}
-            </div>
-          )}
+          {error && <div className="form-error">{error}</div>}
 
           <button type="submit" className="auth-submit" disabled={loading}>
             {loading
@@ -301,12 +373,10 @@ function Register() {
               : `Create ${isWorker ? "Worker" : "Client"} Account`}
             {!loading && <ArrowRight size={18} />}
           </button>
-
         </form>
 
         <div className="auth-footer">
-          Already have an account?{" "}
-          <Link to="/login">Login</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </div>
 
         <button
@@ -315,7 +385,6 @@ function Register() {
         >
           ← Change account type
         </button>
-
       </div>
     </div>
   );

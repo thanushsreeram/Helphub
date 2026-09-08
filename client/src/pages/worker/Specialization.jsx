@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Briefcase,
-  Save,
-  ArrowLeft,
-  Check,
-  Wrench,
-} from "lucide-react";
+import { Briefcase, Save, ArrowLeft, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../services/api";
 import LanguageSelector from "../../components/common/LanguageSelector";
@@ -36,16 +30,12 @@ function Specialization() {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/services`
-      );
+      const response = await fetch(`${API_URL}/api/services`);
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to load services."
-        );
+        throw new Error(data.message || "Failed to load services.");
       }
 
       setServices(data.services || []);
@@ -59,31 +49,21 @@ function Specialization() {
 
   const fetchWorkerServices = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/workers/services`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/api/workers/services`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to load worker services."
-        );
+        throw new Error(data.message || "Failed to load worker services.");
       }
 
-      setSelectedServices(
-        (data.services || []).map((service) => service.id)
-      );
+      setSelectedServices((data.services || []).map((service) => service.id));
     } catch (error) {
-      console.error(
-        "Failed to load worker services:",
-        error
-      );
+      console.error("Failed to load worker services:", error);
     }
   };
 
@@ -114,37 +94,28 @@ function Specialization() {
     try {
       setSaving(true);
 
-      const response = await fetch(
-        `${API_URL}/api/workers/services`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            service_ids: selectedServices,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/workers/services`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          service_ids: selectedServices,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to save specializations."
-        );
+        throw new Error(data.message || "Failed to save specializations.");
       }
 
-      setMessage(
-        "Your specializations have been saved successfully."
-      );
+      setMessage("Your specializations have been saved successfully.");
     } catch (error) {
       console.error("Save specialization error:", error);
 
-      setError(
-        error.message || "Unable to save specializations."
-      );
+      setError(error.message || "Unable to save specializations.");
     } finally {
       setSaving(false);
     }
@@ -155,8 +126,16 @@ function Specialization() {
       {/* Header */}
       <header className="specialization-header">
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <h1 onClick={() => handleLogoClick(navigate)} style={{ cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub" style={{ height: "38px", objectFit: "contain" }} />
+          <h1
+            onClick={() => handleLogoClick(navigate)}
+            style={{ cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub"
+              style={{ height: "38px", objectFit: "contain" }}
+            />
           </h1>
         </div>
 
@@ -185,8 +164,8 @@ function Specialization() {
             <h2>Choose your specializations</h2>
 
             <p className="hero-description">
-              Select the services you provide. Clients will be able
-              to find you based on your selected skills.
+              Select the services you provide. Clients will be able to find you
+              based on your selected skills.
             </p>
           </div>
         </section>
@@ -196,9 +175,7 @@ function Specialization() {
           <div className="card-header">
             <div>
               <h3>Your Services</h3>
-              <p>
-                Select all services you are qualified to provide.
-              </p>
+              <p>Select all services you are qualified to provide.</p>
             </div>
 
             <div className="selected-count">
@@ -214,31 +191,23 @@ function Specialization() {
           ) : error && services.length === 0 ? (
             <div className="error-state">
               <p>{error}</p>
-              <button onClick={fetchServices}>
-                Try Again
-              </button>
+              <button onClick={fetchServices}>Try Again</button>
             </div>
           ) : (
             <form onSubmit={handleSave}>
               <div className="services-grid">
                 {services.map((service) => {
-                  const selected = selectedServices.includes(
-                    service.id
-                  );
+                  const selected = selectedServices.includes(service.id);
 
                   return (
                     <label
                       key={service.id}
-                      className={`service-card ${
-                        selected ? "selected" : ""
-                      }`}
+                      className={`service-card ${selected ? "selected" : ""}`}
                     >
                       <input
                         type="checkbox"
                         checked={selected}
-                        onChange={() =>
-                          handleServiceToggle(service.id)
-                        }
+                        onChange={() => handleServiceToggle(service.id)}
                       />
 
                       <div className="service-icon">
@@ -248,13 +217,9 @@ function Specialization() {
                       <div className="service-content">
                         <h4>{service.name}</h4>
 
-                        <p>
-                          {service.description}
-                        </p>
+                        <p>{service.description}</p>
 
-                        <span>
-                          {service.category}
-                        </span>
+                        <span>{service.category}</span>
                       </div>
 
                       <div className="check-circle">
@@ -265,11 +230,7 @@ function Specialization() {
                 })}
               </div>
 
-              {error && (
-                <div className="specialization-error">
-                  {error}
-                </div>
-              )}
+              {error && <div className="specialization-error">{error}</div>}
 
               {message && (
                 <div className="specialization-success">
@@ -282,27 +243,16 @@ function Specialization() {
                 <div>
                   <strong>
                     {selectedServices.length} service
-                    {selectedServices.length !== 1
-                      ? "s"
-                      : ""}{" "}
-                    selected
+                    {selectedServices.length !== 1 ? "s" : ""} selected
                   </strong>
 
-                  <p>
-                    You can change these selections anytime.
-                  </p>
+                  <p>You can change these selections anytime.</p>
                 </div>
 
-                <button
-                  type="submit"
-                  className="save-button"
-                  disabled={saving}
-                >
+                <button type="submit" className="save-button" disabled={saving}>
                   <Save size={18} />
 
-                  {saving
-                    ? "Saving..."
-                    : "Save Specializations"}
+                  {saving ? "Saving..." : "Save Specializations"}
                 </button>
               </div>
             </form>

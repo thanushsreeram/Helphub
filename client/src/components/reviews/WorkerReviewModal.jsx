@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, Upload, X, AlertCircle, CheckCircle, Image as ImageIcon } from "lucide-react";
+import { Star, Upload, X, AlertCircle, CheckCircle } from "lucide-react";
 import { API_URL } from "../../services/api";
 import "./WorkerReviewModal.css";
 
@@ -102,16 +102,15 @@ function WorkerReviewModal({ isOpen, onClose, booking, onReviewSubmitted }) {
 
   return (
     <div className="worker-review-overlay" onClick={onClose}>
-      <div
-        className="worker-review-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="worker-review-modal" onClick={(e) => e.stopPropagation()}>
         <header className="worker-review-header">
           <div className="header-title">
             <Star className="header-icon" size={24} />
             <div>
               <h2>Rate & Review Client</h2>
-              <p>Booking #{booking.id} &bull; {booking.client_name || "Client"}</p>
+              <p>
+                Booking #{booking.id} &bull; {booking.client_name || "Client"}
+              </p>
             </div>
           </div>
           <button className="close-btn" onClick={onClose} aria-label="Close">
@@ -165,7 +164,9 @@ function WorkerReviewModal({ isOpen, onClose, booking, onReviewSubmitted }) {
                     type="button"
                     key={star}
                     className={`star-btn ${
-                      (hoverBehaviour || behaviourRating) >= star ? "filled" : ""
+                      (hoverBehaviour || behaviourRating) >= star
+                        ? "filled"
+                        : ""
                     }`}
                     onClick={() => setBehaviourRating(star)}
                     onMouseEnter={() => setHoverBehaviour(star)}
@@ -174,13 +175,17 @@ function WorkerReviewModal({ isOpen, onClose, booking, onReviewSubmitted }) {
                     <Star size={22} />
                   </button>
                 ))}
-                <span className="rating-score-badge small">{behaviourRating} / 5</span>
+                <span className="rating-score-badge small">
+                  {behaviourRating} / 5
+                </span>
               </div>
             </div>
 
             {/* COMMENT */}
             <div className="form-group">
-              <label htmlFor="client-review-comment">Review Comments (Optional)</label>
+              <label htmlFor="client-review-comment">
+                Review Comments (Optional)
+              </label>
               <textarea
                 id="client-review-comment"
                 rows="4"

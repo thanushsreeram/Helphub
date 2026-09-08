@@ -1,4 +1,3 @@
-
 import pool from "../config/database.js";
 
 // ============================================================
@@ -61,15 +60,10 @@ export const createBooking = async (req, res) => {
     // 3. Validate material responsibility
     // ----------------------------------------------------------
 
-    if (
-      !["client", "worker", "shared"].includes(
-        materials_provided_by
-      )
-    ) {
+    if (!["client", "worker", "shared"].includes(materials_provided_by)) {
       return res.status(400).json({
         success: false,
-        message:
-          "materials_provided_by must be client, worker, or shared",
+        message: "materials_provided_by must be client, worker, or shared",
       });
     }
 
@@ -81,7 +75,7 @@ export const createBooking = async (req, res) => {
       `SELECT id, user_id, is_available
        FROM worker_profiles
        WHERE id = $1`,
-      [worker_id]
+      [worker_id],
     );
 
     if (workerCheck.rows.length === 0) {
@@ -106,7 +100,7 @@ export const createBooking = async (req, res) => {
       `SELECT id, name
        FROM services
        WHERE id = $1`,
-      [service_id]
+      [service_id],
     );
 
     if (serviceCheck.rows.length === 0) {
@@ -120,7 +114,7 @@ export const createBooking = async (req, res) => {
       `SELECT 1
        FROM worker_services
        WHERE worker_id = $1 AND service_id = $2`,
-      [worker_id, service_id]
+      [worker_id, service_id],
     );
 
     if (workerServiceCheck.rows.length === 0) {
@@ -147,8 +141,7 @@ export const createBooking = async (req, res) => {
     if (bookingDateObject <= new Date()) {
       return res.status(400).json({
         success: false,
-        message:
-          "Booking date and time must be in the future",
+        message: "Booking date and time must be in the future",
       });
     }
 
@@ -169,15 +162,9 @@ export const createBooking = async (req, res) => {
     const selectedDay = dayNames[bookingDateObject.getDay()];
 
     const selectedTime =
-      bookingDateObject
-        .getHours()
-        .toString()
-        .padStart(2, "0") +
+      bookingDateObject.getHours().toString().padStart(2, "0") +
       ":" +
-      bookingDateObject
-        .getMinutes()
-        .toString()
-        .padStart(2, "0");
+      bookingDateObject.getMinutes().toString().padStart(2, "0");
 
     const availabilityCheck = await pool.query(
       `SELECT
@@ -194,18 +181,13 @@ export const createBooking = async (req, res) => {
          AND $3::time >= start_time
          AND $3::time < end_time
        LIMIT 1`,
-      [
-        worker_id,
-        selectedDay,
-        selectedTime,
-      ]
+      [worker_id, selectedDay, selectedTime],
     );
 
     if (availabilityCheck.rows.length === 0) {
       return res.status(400).json({
         success: false,
-        message:
-          `Worker is not available on ${selectedDay} at ${selectedTime}. Please choose another date or time.`,
+        message: `Worker is not available on ${selectedDay} at ${selectedTime}. Please choose another date or time.`,
         day: selectedDay,
         time: selectedTime,
       });
@@ -213,7 +195,10 @@ export const createBooking = async (req, res) => {
 
     const avail = availabilityCheck.rows[0];
     const bookingYear = bookingDateObject.getFullYear();
-    const bookingMonth = String(bookingDateObject.getMonth() + 1).padStart(2, "0");
+    const bookingMonth = String(bookingDateObject.getMonth() + 1).padStart(
+      2,
+      "0",
+    );
     const bookingMonthStr = `${bookingYear}-${bookingMonth}`;
     const bookingDayStr = `${bookingYear}-${bookingMonth}-${String(bookingDateObject.getDate()).padStart(2, "0")}`;
 
@@ -225,8 +210,12 @@ export const createBooking = async (req, res) => {
         });
       }
     } else if (avail.schedule_type === "custom") {
-      const startDateStr = avail.start_date ? new Date(avail.start_date).toISOString().slice(0, 10) : null;
-      const endDateStr = avail.end_date ? new Date(avail.end_date).toISOString().slice(0, 10) : null;
+      const startDateStr = avail.start_date
+        ? new Date(avail.start_date).toISOString().slice(0, 10)
+        : null;
+      const endDateStr = avail.end_date
+        ? new Date(avail.end_date).toISOString().slice(0, 10)
+        : null;
 
       if (startDateStr && bookingDayStr < startDateStr) {
         return res.status(400).json({
@@ -257,7 +246,7 @@ export const createBooking = async (req, res) => {
            'in_progress'
          )
        LIMIT 1`,
-      [worker_id, booking_date]
+      [worker_id, booking_date],
     );
 
     if (conflictingBooking.rows.length > 0) {
@@ -265,8 +254,7 @@ export const createBooking = async (req, res) => {
         success: false,
         message:
           "This worker already has a booking at the selected date and time. Please choose another time.",
-        conflicting_booking:
-          conflictingBooking.rows[0],
+        conflicting_booking: conflictingBooking.rows[0],
       });
     }
 
@@ -345,7 +333,7 @@ export const createBooking = async (req, res) => {
         travelCharge,
         totalCost,
         materials_provided_by,
-      ]
+      ],
     );
 
     // ----------------------------------------------------------
@@ -357,7 +345,6 @@ export const createBooking = async (req, res) => {
       message: "Booking request created successfully",
       booking: result.rows[0],
     });
-
   } catch (error) {
     console.error("Create booking error:", error);
 
@@ -367,7 +354,6 @@ export const createBooking = async (req, res) => {
     });
   }
 };
-
 
 // ============================================================
 // GET MY BOOKINGS
@@ -398,7 +384,7 @@ export const getMyBookings = async (req, res) => {
        WHERE b.client_id = $1
           OR wp.user_id = $1
        ORDER BY b.created_at DESC`,
-      [userId]
+      [userId],
     );
 
     return res.json({
@@ -406,7 +392,6 @@ export const getMyBookings = async (req, res) => {
       count: result.rows.length,
       bookings: result.rows,
     });
-
   } catch (error) {
     console.error("Get bookings error:", error);
 
@@ -416,7 +401,6 @@ export const getMyBookings = async (req, res) => {
     });
   }
 };
-
 
 // ============================================================
 // GET BOOKING BY ID
@@ -447,7 +431,7 @@ export const getBookingById = async (req, res) => {
        JOIN services s ON s.id = b.service_id
        WHERE b.id = $1
          AND (b.client_id = $2 OR wp.user_id = $2)`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (result.rows.length === 0) {
@@ -461,7 +445,6 @@ export const getBookingById = async (req, res) => {
       success: true,
       booking: result.rows[0],
     });
-
   } catch (error) {
     console.error("Get booking error:", error);
 
@@ -471,7 +454,6 @@ export const getBookingById = async (req, res) => {
     });
   }
 };
-
 
 // ============================================================
 // ACCEPT BOOKING
@@ -494,7 +476,7 @@ export const acceptBooking = async (req, res) => {
        JOIN worker_profiles wp ON wp.id = b.worker_id
        WHERE b.id = $1
        FOR UPDATE`,
-      [bookingId]
+      [bookingId],
     );
 
     if (bookingResult.rows.length === 0) {
@@ -508,24 +490,19 @@ export const acceptBooking = async (req, res) => {
 
     const booking = bookingResult.rows[0];
 
-    if (
-      Number(booking.worker_user_id) !==
-      Number(userId)
-    ) {
+    if (Number(booking.worker_user_id) !== Number(userId)) {
       await client.query("ROLLBACK");
 
       return res.status(403).json({
         success: false,
-        message:
-          "You can only accept bookings assigned to you",
+        message: "You can only accept bookings assigned to you",
       });
     }
 
     if (booking.status !== "pending") {
       return res.status(400).json({
         success: false,
-        message:
-          `Booking cannot be accepted because its status is ${booking.status}`,
+        message: `Booking cannot be accepted because its status is ${booking.status}`,
       });
     }
 
@@ -539,11 +516,10 @@ export const acceptBooking = async (req, res) => {
        FROM bookings
        WHERE worker_id = $1
          AND status IN ('accepted', 'committed', 'in_progress')`,
-      [booking.worker_id]
+      [booking.worker_id],
     );
 
-    const activeJobs =
-      activeResult.rows[0].active_jobs;
+    const activeJobs = activeResult.rows[0].active_jobs;
 
     if (activeJobs >= 3) {
       await client.query("ROLLBACK");
@@ -559,23 +535,21 @@ export const acceptBooking = async (req, res) => {
 
     const updated = await client.query(
       `UPDATE bookings
-       SET status = 'committed'
+      SET status = 'accepted'
        WHERE id = $1
        RETURNING *`,
-      [bookingId]
+      [bookingId],
     );
 
     await client.query("COMMIT");
 
     return res.json({
       success: true,
-      message:
-        "Booking accepted and committed successfully",
+      message: "Booking accepted successfully",
       booking: updated.rows[0],
       active_jobs: activeJobs + 1,
       maximum_active_jobs: 3,
     });
-
   } catch (error) {
     await client.query("ROLLBACK");
 
@@ -583,15 +557,12 @@ export const acceptBooking = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while accepting booking",
+      message: "Server error while accepting booking",
     });
-
   } finally {
     client.release();
   }
 };
-
 
 // ============================================================
 // REJECT BOOKING
@@ -611,14 +582,13 @@ export const rejectBooking = async (req, res) => {
          AND wp.user_id = $2
          AND b.status = 'pending'
        RETURNING b.*`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message:
-          "Pending booking not found or you are not the assigned worker",
+        message: "Pending booking not found or you are not the assigned worker",
       });
     }
 
@@ -627,18 +597,15 @@ export const rejectBooking = async (req, res) => {
       message: "Booking rejected",
       booking: result.rows[0],
     });
-
   } catch (error) {
     console.error("Reject booking error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while rejecting booking",
+      message: "Server error while rejecting booking",
     });
   }
 };
-
 
 // ============================================================
 // START BOOKING
@@ -658,7 +625,7 @@ export const startBooking = async (req, res) => {
          AND wp.user_id = $2
          AND b.status = 'committed'
        RETURNING b.*`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (result.rows.length === 0) {
@@ -674,18 +641,15 @@ export const startBooking = async (req, res) => {
       message: "Job started",
       booking: result.rows[0],
     });
-
   } catch (error) {
     console.error("Start booking error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while starting job",
+      message: "Server error while starting job",
     });
   }
 };
-
 
 // ============================================================
 // COMPLETE BOOKING
@@ -705,7 +669,7 @@ export const completeBooking = async (req, res) => {
          AND wp.user_id = $2
          AND b.status = 'in_progress'
        RETURNING b.*`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (result.rows.length === 0) {
@@ -721,18 +685,15 @@ export const completeBooking = async (req, res) => {
       message: "Job completed successfully",
       booking: result.rows[0],
     });
-
   } catch (error) {
     console.error("Complete booking error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while completing job",
+      message: "Server error while completing job",
     });
   }
 };
-
 
 // ============================================================
 // CANCEL BOOKING
@@ -746,10 +707,7 @@ export const cancelBooking = async (req, res) => {
     const { cancellation_reason, additional_details } = req.body;
 
     // Validate reason
-    if (
-      !cancellation_reason ||
-      !cancellation_reason.trim()
-    ) {
+    if (!cancellation_reason || !cancellation_reason.trim()) {
       return res.status(400).json({
         success: false,
         message: "Cancellation reason is required",
@@ -758,9 +716,7 @@ export const cancelBooking = async (req, res) => {
 
     const reason = cancellation_reason.trim();
     const details =
-      typeof additional_details === "string"
-        ? additional_details.trim()
-        : "";
+      typeof additional_details === "string" ? additional_details.trim() : "";
 
     const finalReason = details ? `${reason}: ${details}` : reason;
 
@@ -786,7 +742,7 @@ export const cancelBooking = async (req, res) => {
          AND client_id = $3
          AND status IN ('pending', 'committed')
        RETURNING *`,
-      [finalReason, bookingId, userId]
+      [finalReason, bookingId, userId],
     );
 
     if (result.rows.length === 0) {
@@ -812,15 +768,11 @@ export const cancelBooking = async (req, res) => {
   }
 };
 
-
 // ============================================================
 // EMERGENCY CANCEL BOOKING
 // ============================================================
 
-export const emergencyCancelBooking = async (
-  req,
-  res
-) => {
+export const emergencyCancelBooking = async (req, res) => {
   try {
     const userId = req.user.userId;
     const bookingId = Number(req.params.id);
@@ -829,8 +781,7 @@ export const emergencyCancelBooking = async (
     if (!reason || !reason.trim()) {
       return res.status(400).json({
         success: false,
-        message:
-          "Emergency cancellation reason is required",
+        message: "Emergency cancellation reason is required",
       });
     }
 
@@ -845,11 +796,7 @@ export const emergencyCancelBooking = async (
          AND wp.user_id = $3
          AND b.status IN ('committed', 'in_progress')
        RETURNING b.*`,
-      [
-        reason.trim(),
-        bookingId,
-        userId,
-      ]
+      [reason.trim(), bookingId, userId],
     );
 
     if (result.rows.length === 0) {
@@ -862,25 +809,18 @@ export const emergencyCancelBooking = async (
 
     return res.json({
       success: true,
-      message:
-        "Emergency cancellation submitted",
+      message: "Emergency cancellation submitted",
       booking: result.rows[0],
     });
-
   } catch (error) {
-    console.error(
-      "Emergency cancellation error:",
-      error
-    );
+    console.error("Emergency cancellation error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while cancelling booking",
+      message: "Server error while cancelling booking",
     });
   }
 };
-
 
 // ============================================================
 // COMMIT BOOKING
@@ -900,7 +840,7 @@ export const commitBooking = async (req, res) => {
          AND wp.user_id = $2
          AND b.status = 'accepted'
        RETURNING b.*`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (result.rows.length === 0) {
@@ -916,17 +856,12 @@ export const commitBooking = async (req, res) => {
       message: "Booking committed successfully",
       booking: result.rows[0],
     });
-
   } catch (error) {
-    console.error(
-      "Commit booking error:",
-      error
-    );
+    console.error("Commit booking error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while committing booking",
+      message: "Server error while committing booking",
     });
   }
 };

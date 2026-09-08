@@ -3,10 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   CalendarDays,
-  MapPin,
   User,
   Briefcase,
-  IndianRupee,
   Clock,
   CheckCircle,
   CreditCard,
@@ -43,21 +41,16 @@ function ClientBookingDetails() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          `${API_URL}/api/bookings/${bookingId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${API_URL}/api/bookings/${bookingId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(
-            data.message || "Failed to load booking"
-          );
+          throw new Error(data.message || "Failed to load booking");
         }
 
         setBooking(data.booking);
@@ -101,32 +94,25 @@ function ClientBookingDetails() {
             cancellation_reason: cancellationReason,
             additional_details: cancellationDetails.trim(),
           }),
-        }
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Unable to cancel booking"
-        );
+        throw new Error(data.message || "Unable to cancel booking");
       }
 
       setBooking(data.booking);
       setShowCancelModal(false);
       setCancellationReason("");
       setCancellationDetails("");
-
     } catch (error) {
       console.error("Cancel booking error:", error);
       setError(error.message);
     } finally {
       setCancelling(false);
     }
-  };
-
-  const handleRateWorker = () => {
-    navigate(`/client/bookings/${booking.id}/review`);
   };
 
   const formatDate = (date) => {
@@ -143,9 +129,7 @@ function ClientBookingDetails() {
 
     return status
       .replaceAll("_", " ")
-      .replace(/\b\w/g, (letter) =>
-        letter.toUpperCase()
-      );
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
   const getStatusIcon = (status) => {
@@ -157,10 +141,7 @@ function ClientBookingDetails() {
       return <XCircle size={19} />;
     }
 
-    if (
-      status === "committed" ||
-      status === "in_progress"
-    ) {
+    if (status === "committed" || status === "in_progress") {
       return <Clock size={19} />;
     }
 
@@ -168,18 +149,13 @@ function ClientBookingDetails() {
   };
 
   const canCancel =
-    booking &&
-    (booking.status === "pending" ||
-      booking.status === "committed");
+    booking && (booking.status === "pending" || booking.status === "committed");
 
   const canPay =
     booking &&
-    [
-      "accepted",
-      "committed",
-      "in_progress",
-      "completed",
-    ].includes(booking.status);
+    ["accepted", "committed", "in_progress", "completed"].includes(
+      booking.status,
+    );
 
   if (loading) {
     return (
@@ -216,9 +192,20 @@ function ClientBookingDetails() {
     <div className="booking-details-page">
       {/* Header */}
       <header className="booking-details-header">
-        <div className="booking-details-brand" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <h1 onClick={() => handleLogoClick(navigate)} style={{ cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub" style={{ height: "40px", objectFit: "contain" }} />
+        <div
+          className="booking-details-brand"
+          style={{ display: "flex", alignItems: "center", gap: "16px" }}
+        >
+          <h1
+            onClick={() => handleLogoClick(navigate)}
+            style={{ cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub"
+              style={{ height: "40px", objectFit: "contain" }}
+            />
           </h1>
         </div>
 
@@ -238,17 +225,11 @@ function ClientBookingDetails() {
         {/* Page Heading */}
         <div className="booking-details-heading">
           <div>
-            <span className="booking-label">
-              BOOKING #{booking.id}
-            </span>
+            <span className="booking-label">BOOKING #{booking.id}</span>
 
-            <h2>
-              {booking.service_name || "Service Booking"}
-            </h2>
+            <h2>{booking.service_name || "Service Booking"}</h2>
 
-            <p>
-              Review your service booking information and payment details.
-            </p>
+            <p>Review your service booking information and payment details.</p>
           </div>
 
           <div className={`booking-status ${booking.status}`}>
@@ -309,8 +290,8 @@ function ClientBookingDetails() {
                     {booking.materials_provided_by === "worker"
                       ? "Worker provides"
                       : booking.materials_provided_by === "shared"
-                      ? "Shared responsibility"
-                      : "Client provides"}
+                        ? "Shared responsibility"
+                        : "Client provides"}
                   </strong>
                 </div>
               </div>
@@ -326,7 +307,16 @@ function ClientBookingDetails() {
               <div className="worker-detail-box">
                 <div className="worker-detail-avatar">
                   {booking.worker_avatar_url ? (
-                    <img src={booking.worker_avatar_url} alt={booking.worker_name} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    <img
+                      src={booking.worker_avatar_url}
+                      alt={booking.worker_name}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
+                    />
                   ) : (
                     <User size={27} />
                   )}
@@ -347,7 +337,8 @@ function ClientBookingDetails() {
               </div>
 
               <div className="description-box">
-                {booking.description || "No description provided for this booking."}
+                {booking.description ||
+                  "No description provided for this booking."}
               </div>
             </div>
           </section>
@@ -364,7 +355,9 @@ function ClientBookingDetails() {
 
               <div className="summary-row">
                 <span>Total Amount</span>
-                <strong className="total-price">₹{booking.total_price || 0}</strong>
+                <strong className="total-price">
+                  ₹{booking.total_price || 0}
+                </strong>
               </div>
 
               {canPay && (

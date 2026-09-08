@@ -87,7 +87,7 @@ function BookingForm() {
         const workers = workerData.workers || [];
 
         const selectedWorker = workers.find(
-          (item) => Number(item.worker_id) === Number(workerId)
+          (item) => Number(item.worker_id) === Number(workerId),
         );
 
         if (!selectedWorker) {
@@ -135,7 +135,9 @@ function BookingForm() {
 
     if (availability.length === 0) {
       setIsTimeAvailable(false);
-      setAvailabilityMessage("This worker has not set their working hours yet.");
+      setAvailabilityMessage(
+        "This worker has not set their working hours yet.",
+      );
       return;
     }
 
@@ -164,7 +166,7 @@ function BookingForm() {
       selectedDate.getMinutes().toString().padStart(2, "0");
 
     const dayAvailability = availability.find(
-      (day) => day.day_of_week === selectedDay && day.is_available === true
+      (day) => day.day_of_week === selectedDay && day.is_available === true,
     );
 
     if (!dayAvailability) {
@@ -179,12 +181,12 @@ function BookingForm() {
     if (selectedTime >= startTime && selectedTime < endTime) {
       setIsTimeAvailable(true);
       setAvailabilityMessage(
-        `Worker is available on ${selectedDay} from ${startTime} to ${endTime}.`
+        `Worker is available on ${selectedDay} from ${startTime} to ${endTime}.`,
       );
     } else {
       setIsTimeAvailable(false);
       setAvailabilityMessage(
-        `Worker is available on ${selectedDay} from ${startTime} to ${endTime}. Please choose a time within these hours.`
+        `Worker is available on ${selectedDay} from ${startTime} to ${endTime}. Please choose a time within these hours.`,
       );
     }
   };
@@ -224,7 +226,12 @@ function BookingForm() {
         throw new Error(data.message || "Failed to create booking");
       }
 
-      navigate(`/client/bookings/${data.booking?.booking_id || ""}`);
+      const bookingId = data.booking?.id;
+      if (!bookingId) {
+        throw new Error("Booking was created but no booking ID was returned");
+      }
+
+      navigate(`/client/bookings/${bookingId}`);
     } catch (err) {
       console.error("Submit booking error:", err);
       setError(err.message || "Failed to submit booking");
@@ -273,7 +280,10 @@ function BookingForm() {
               <p>Schedule service with {worker?.name || "Worker"}</p>
             </div>
           </div>
-          <div className="header-right" style={{ display: "flex", alignItems: "center" }}>
+          <div
+            className="header-right"
+            style={{ display: "flex", alignItems: "center" }}
+          >
             <LanguageSelector />
           </div>
         </header>

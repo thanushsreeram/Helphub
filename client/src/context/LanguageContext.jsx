@@ -1,5 +1,9 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { translations, categoryTranslationMap, dayTranslationMap } from "../translations/translations";
+import { createContext, useContext, useState } from "react";
+import {
+  translations,
+  categoryTranslationMap,
+  dayTranslationMap,
+} from "../translations/translations";
 
 const LanguageContext = createContext();
 
@@ -46,7 +50,9 @@ export function LanguageProvider({ children }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, tCategory, tDay }}>
+    <LanguageContext.Provider
+      value={{ language, setLanguage, t, tCategory, tDay }}
+    >
       {children}
     </LanguageContext.Provider>
   );

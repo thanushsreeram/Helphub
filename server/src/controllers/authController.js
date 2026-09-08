@@ -38,7 +38,7 @@ export const register = async (req, res) => {
     // Check existing user
     const existingUser = await pool.query(
       "SELECT id FROM users WHERE email = $1",
-      [email.toLowerCase().trim()]
+      [email.toLowerCase().trim()],
     );
 
     if (existingUser.rows.length > 0) {
@@ -67,22 +67,30 @@ export const register = async (req, res) => {
         role,
         phone || null,
         verificationToken,
-      ]
+      ],
     );
 
     const user = result.rows[0];
     const origin = req.headers.origin || "http://localhost:5173";
     const verificationLink = `${origin}/verify-email?token=${verificationToken}`;
 
-    console.log(`📧 [HelpHub Email Service] Verification email sent to ${user.email}: ${verificationLink}`);
+    console.log(
+      `📧 [HelpHub Email Service] Verification email sent to ${user.email}: ${verificationLink}`,
+    );
 
-    res.status(201).json({
+    const response = {
       success: true,
-      message: "Registration successful! Please check your email to verify your account.",
+      message:
+        "Registration successful! Please check your email to verify your account.",
       user,
-      verification_token: verificationToken,
-      verification_link: verificationLink,
-    });
+    };
+
+    if (process.env.NODE_ENV !== "production") {
+      response.verification_token = verificationToken;
+      response.verification_link = verificationLink;
+    }
+
+    res.status(201).json(response);
   } catch (error) {
     console.error("Registration error:", error);
 
@@ -110,7 +118,7 @@ export const verifyEmail = async (req, res) => {
            email_verification_token = NULL
        WHERE email_verification_token = $1
        RETURNING id, name, email, role, phone, created_at`,
-      [token]
+      [token],
     );
 
     if (result.rows.length === 0) {
@@ -130,7 +138,7 @@ export const verifyEmail = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
 
     return res.json({
@@ -164,7 +172,7 @@ export const login = async (req, res) => {
       `SELECT id, name, email, password_hash, role, phone, is_email_verified, email_verification_token
        FROM users
        WHERE email = $1`,
-      [email.toLowerCase().trim()]
+      [email.toLowerCase().trim()],
     );
 
     if (result.rows.length === 0) {
@@ -176,10 +184,7 @@ export const login = async (req, res) => {
 
     const user = result.rows[0];
 
-    const passwordMatch = await bcrypt.compare(
-      password,
-      user.password_hash
-    );
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
       return res.status(401).json({
@@ -189,15 +194,11 @@ export const login = async (req, res) => {
     }
 
     if (user.is_email_verified === false) {
-      const origin = req.headers.origin || "http://localhost:5173";
-      const verificationLink = `${origin}/verify-email?token=${user.email_verification_token}`;
-
       return res.status(403).json({
         success: false,
         is_unverified: true,
-        message: "Your email address is not verified yet. Please check your inbox and click the verification link.",
-        verification_token: user.email_verification_token,
-        verification_link: verificationLink,
+        message:
+          "Your email address is not verified yet. Please check your inbox and click the verification link.",
       });
     }
 
@@ -209,7 +210,7 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
 
     delete user.password_hash;
@@ -248,7 +249,7 @@ export const switchRole = async (req, res) => {
        SET role = $1
        WHERE id = $2
        RETURNING id, name, email, role, phone, is_email_verified, created_at`,
-      [target_role, userId]
+      [target_role, userId],
     );
 
     if (updateResult.rows.length === 0) {
@@ -264,7 +265,7 @@ export const switchRole = async (req, res) => {
     if (target_role === "worker") {
       const workerCheck = await pool.query(
         `SELECT id FROM worker_profiles WHERE user_id = $1`,
-        [userId]
+        [userId],
       );
 
       if (workerCheck.rows.length === 0) {
@@ -272,7 +273,7 @@ export const switchRole = async (req, res) => {
           `INSERT INTO worker_profiles
            (user_id, hourly_rate, bio, category, experience_years, is_available)
            VALUES ($1, 500, 'Service Professional', 'General Labour', 1, true)`,
-          [userId]
+          [userId],
         );
       }
     }
@@ -286,7 +287,7 @@ export const switchRole = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
 
     res.json({

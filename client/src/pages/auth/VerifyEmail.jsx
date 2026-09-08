@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { CheckCircle, XCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { API_URL } from "../../services/api";
 import LanguageSelector from "../../components/common/LanguageSelector";
 import { handleLogoClick } from "../../utils/navigation";
@@ -22,7 +22,9 @@ function VerifyEmail() {
     const doVerify = async () => {
       if (!token) {
         setLoading(false);
-        setError("Missing verification token. Please check your email verification link.");
+        setError(
+          "Missing verification token. Please check your email verification link.",
+        );
         return;
       }
 
@@ -30,7 +32,9 @@ function VerifyEmail() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`${API_URL}/api/auth/verify-email?token=${token}`);
+        const response = await fetch(
+          `${API_URL}/api/auth/verify-email?token=${token}`,
+        );
         const data = await response.json();
 
         if (!response.ok || !data.success) {
@@ -69,9 +73,26 @@ function VerifyEmail() {
   return (
     <div className="auth-page">
       <div className="auth-card verify-email-card">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: "15px" }}>
-          <div onClick={() => handleLogoClick(navigate)} className="auth-logo" style={{ margin: 0, cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub Logo" style={{ height: "48px", objectFit: "contain" }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+            marginBottom: "15px",
+          }}
+        >
+          <div
+            onClick={() => handleLogoClick(navigate)}
+            className="auth-logo"
+            style={{ margin: 0, cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub Logo"
+              style={{ height: "48px", objectFit: "contain" }}
+            />
           </div>
           <LanguageSelector />
         </div>
@@ -80,7 +101,9 @@ function VerifyEmail() {
           <div className="verify-state-box">
             <div className="loading-spinner"></div>
             <h2>Verifying your email address...</h2>
-            <p>Please wait while we confirm your email and set up your account.</p>
+            <p>
+              Please wait while we confirm your email and set up your account.
+            </p>
           </div>
         ) : success ? (
           <div className="verify-state-box success-state">
@@ -90,10 +113,15 @@ function VerifyEmail() {
 
             <h2>Email Verified Successfully! 🎉</h2>
             <p>
-              Welcome to HelpHub, <strong>{user?.name}</strong>! Your email address has been verified. You now have full access to your account.
+              Welcome to HelpHub, <strong>{user?.name}</strong>! Your email
+              address has been verified. You now have full access to your
+              account.
             </p>
 
-            <button className="auth-submit enter-app-btn" onClick={handleEnterApp}>
+            <button
+              className="auth-submit enter-app-btn"
+              onClick={handleEnterApp}
+            >
               Enter HelpHub Dashboard <ArrowRight size={18} />
             </button>
           </div>

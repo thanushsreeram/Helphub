@@ -3,13 +3,12 @@ import pool from "../config/database.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-const razorpayKeyId = process.env.RAZORPAY_KEY_ID || "rzp_test_TX8UhLHvW0r4ou";
-const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET || "OjXRV73PHqeznOPbkYBkHb7c";
-
-const razorpay = new Razorpay({
-  key_id: razorpayKeyId,
-  key_secret: razorpayKeySecret,
-});
+const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
+const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
+const razorpay =
+  razorpayKeyId && razorpayKeySecret
+    ? new Razorpay({ key_id: razorpayKeyId, key_secret: razorpayKeySecret })
+    : null;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +18,13 @@ const razorpay = new Razorpay({
 
 export const createRazorpayOrder = async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(503).json({
+        success: false,
+        message: "Online payments are not configured",
+      });
+    }
+
     const userId = req.user.userId;
     const bookingId = Number(req.params.bookingId);
 
@@ -39,7 +45,7 @@ export const createRazorpayOrder = async (req, res) => {
        FROM bookings b
        WHERE b.id = $1
          AND b.client_id = $2`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (bookingResult.rows.length === 0) {
@@ -71,7 +77,7 @@ export const createRazorpayOrder = async (req, res) => {
       `SELECT id, payment_status
        FROM payments
        WHERE booking_id = $1`,
-      [bookingId]
+      [bookingId],
     );
 
     if (existingPayment.rows.length > 0) {
@@ -142,7 +148,6 @@ export const createRazorpayOrder = async (req, res) => {
   }
 };
 
-
 /*
 |--------------------------------------------------------------------------
 | Verify Razorpay Payment
@@ -151,6 +156,13 @@ export const createRazorpayOrder = async (req, res) => {
 
 export const verifyRazorpayPayment = async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(503).json({
+        success: false,
+        message: "Online payments are not configured",
+      });
+    }
+
     const userId = req.user.userId;
 
     const {
@@ -184,7 +196,7 @@ export const verifyRazorpayPayment = async (req, res) => {
        FROM bookings b
        WHERE b.id = $1
          AND b.client_id = $2`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (bookingResult.rows.length === 0) {
@@ -200,13 +212,8 @@ export const verifyRazorpayPayment = async (req, res) => {
      * Verify Razorpay signature.
      */
     const generatedSignature = crypto
-      .createHmac(
-        "sha256",
-        razorpayKeySecret
-      )
-      .update(
-        `${razorpay_order_id}|${razorpay_payment_id}`
-      )
+      .createHmac("sha256", razorpayKeySecret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 
     if (generatedSignature !== razorpay_signature) {
@@ -222,8 +229,7 @@ export const verifyRazorpayPayment = async (req, res) => {
      * This gives us an additional server-side check that
      * the order really belongs to this HelpHub booking.
      */
-    const razorpayOrder =
-      await razorpay.orders.fetch(razorpay_order_id);
+    const razorpayOrder = await razorpay.orders.fetch(razorpay_order_id);
 
     if (!razorpayOrder) {
       return res.status(400).json({
@@ -241,9 +247,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     if (
       razorpayOrder.receipt &&
-      !razorpayOrder.receipt.startsWith(
-        `HH_BOOKING_${bookingId}_`
-      )
+      !razorpayOrder.receipt.startsWith(`HH_BOOKING_${bookingId}_`)
     ) {
       return res.status(400).json({
         success: false,
@@ -251,9 +255,7 @@ export const verifyRazorpayPayment = async (req, res) => {
       });
     }
 
-    const expectedAmount = Math.round(
-      Number(booking.total_cost) * 100
-    );
+    const expectedAmount = Math.round(Number(booking.total_cost) * 100);
 
     if (Number(razorpayOrder.amount) !== expectedAmount) {
       return res.status(400).json({
@@ -271,7 +273,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
       const existingPayment = await dbClient.query(
         `SELECT * FROM payments WHERE booking_id = $1`,
-        [bookingId]
+        [bookingId],
       );
 
       if (existingPayment.rows.length > 0) {
@@ -302,7 +304,7 @@ export const verifyRazorpayPayment = async (req, res) => {
           "paid",
           razorpay_payment_id,
           new Date(),
-        ]
+        ],
       );
 
       await dbClient.query("COMMIT");
@@ -328,7 +330,6 @@ export const verifyRazorpayPayment = async (req, res) => {
   }
 };
 
-
 /*
 |--------------------------------------------------------------------------
 | Cash / Existing Payment
@@ -340,9 +341,7 @@ export const createPayment = async (req, res) => {
     const userId = req.user.userId;
     const bookingId = Number(req.params.bookingId);
 
-    const {
-      payment_method,
-    } = req.body;
+    const { payment_method } = req.body;
 
     if (!payment_method) {
       return res.status(400).json({
@@ -367,7 +366,7 @@ export const createPayment = async (req, res) => {
        FROM bookings b
        WHERE b.id = $1
          AND b.client_id = $2`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (bookingResult.rows.length === 0) {
@@ -402,7 +401,7 @@ export const createPayment = async (req, res) => {
 
       const existingPayment = await dbClient.query(
         `SELECT id, payment_status FROM payments WHERE booking_id = $1`,
-        [bookingId]
+        [bookingId],
       );
 
       if (existingPayment.rows.length > 0) {
@@ -426,14 +425,7 @@ export const createPayment = async (req, res) => {
          )
          VALUES ($1,$2,$3,$4,$5,$6)
          RETURNING *`,
-        [
-          bookingId,
-          Number(booking.total_cost),
-          "cash",
-          "pending",
-          null,
-          null,
-        ]
+        [bookingId, Number(booking.total_cost), "cash", "pending", null, null],
       );
 
       await dbClient.query("COMMIT");
@@ -459,7 +451,6 @@ export const createPayment = async (req, res) => {
   }
 };
 
-
 /*
 |--------------------------------------------------------------------------
 | Get Payment
@@ -479,7 +470,7 @@ export const getPaymentByBooking = async (req, res) => {
        JOIN worker_profiles wp ON wp.id = b.worker_id
        WHERE p.booking_id = $1
          AND (b.client_id = $2 OR wp.user_id = $2)`,
-      [bookingId, userId]
+      [bookingId, userId],
     );
 
     if (result.rows.length === 0) {

@@ -20,8 +20,6 @@ function ClientDashboard() {
   const { t } = useLanguage();
 
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const token = localStorage.getItem("helphub_token");
   const user = JSON.parse(localStorage.getItem("helphub_user") || "{}");
 
@@ -47,7 +45,6 @@ function ClientDashboard() {
       } catch (error) {
         console.error("Failed to load bookings:", error);
       } finally {
-        setLoading(false);
       }
     };
 
@@ -62,7 +59,6 @@ function ClientDashboard() {
 
   const handleSwitchToWorker = async () => {
     try {
-      setLoading(true);
       const response = await fetch(`${API_URL}/api/auth/switch-role`, {
         method: "POST",
         headers: {
@@ -81,35 +77,47 @@ function ClientDashboard() {
     } catch (err) {
       console.error("Role switch error", err);
     } finally {
-      setLoading(false);
     }
   };
 
   const activeBookings = bookings.filter((booking) =>
-    ["pending", "committed", "in_progress"].includes(booking.status)
+    ["pending", "committed", "in_progress"].includes(booking.status),
   );
 
   const completedBookings = bookings.filter(
-    (booking) => booking.status === "completed"
+    (booking) => booking.status === "completed",
   );
 
   return (
     <div className="client-dashboard-page">
-
       {/* HEADER */}
       <header className="client-header">
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <h1 onClick={() => handleLogoClick(navigate)} style={{ cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub" style={{ height: "40px", objectFit: "contain" }} />
+          <h1
+            onClick={() => handleLogoClick(navigate)}
+            style={{ cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub"
+              style={{ height: "40px", objectFit: "contain" }}
+            />
           </h1>
         </div>
 
-        <div className="client-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-
+        <div
+          className="client-header-actions"
+          style={{ display: "flex", alignItems: "center", gap: "10px" }}
+        >
           <button
             className="profile-button"
             onClick={handleSwitchToWorker}
-            style={{ background: "#eef2ff", color: "#4f46e5", borderColor: "#c7d2fe" }}
+            style={{
+              background: "#eef2ff",
+              color: "#4f46e5",
+              borderColor: "#c7d2fe",
+            }}
             title="Switch to Worker Portal"
           >
             <Briefcase size={17} />
@@ -137,10 +145,7 @@ function ClientDashboard() {
             {t("nav_profile")}
           </button>
 
-          <button
-            className="client-logout-button"
-            onClick={handleLogout}
-          >
+          <button className="client-logout-button" onClick={handleLogout}>
             <LogOut size={18} />
             {t("nav_logout")}
           </button>
@@ -150,19 +155,14 @@ function ClientDashboard() {
 
       {/* MAIN */}
       <main className="client-dashboard-content">
-
         {/* WELCOME */}
         <section className="client-welcome">
           <div>
             <p className="welcome-label">WELCOME BACK</p>
 
-            <h2>
-              Hello, {user.name || "Client"} 👋
-            </h2>
+            <h2>Hello, {user.name || "Client"} 👋</h2>
 
-            <p>
-              Find trusted workers and manage your service bookings.
-            </p>
+            <p>Find trusted workers and manage your service bookings.</p>
           </div>
 
           <button
@@ -176,7 +176,6 @@ function ClientDashboard() {
 
         {/* STATS */}
         <section className="client-stats">
-
           <div className="client-stat-card">
             <div className="client-stat-icon">
               <CalendarDays size={22} />
@@ -209,18 +208,14 @@ function ClientDashboard() {
               <strong>{completedBookings.length}</strong>
             </div>
           </div>
-
         </section>
 
         {/* QUICK ACTIONS */}
         <section className="quick-actions">
-
           <div className="quick-action-card">
             <div>
               <h3>Need a service?</h3>
-              <p>
-                Search for skilled workers near your location.
-              </p>
+              <p>Search for skilled workers near your location.</p>
             </div>
 
             <button onClick={() => navigate("/client/workers")}>
@@ -231,18 +226,14 @@ function ClientDashboard() {
           <div className="quick-action-card">
             <div>
               <h3>My Bookings</h3>
-              <p>
-                View status and details of your booked services.
-              </p>
+              <p>View status and details of your booked services.</p>
             </div>
 
             <button onClick={() => navigate("/client/bookings")}>
               {t("nav_my_bookings")}
             </button>
           </div>
-
         </section>
-
       </main>
     </div>
   );
