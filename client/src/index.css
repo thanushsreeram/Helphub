@@ -2,6 +2,51 @@ html {
   scroll-behavior: smooth;
 }
 
+#root,
 body {
+  width: 100%;
+  min-width: 0;
   margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button,
+a {
+  touch-action: manipulation;
+}
+
+[class$="-page"],
+[class$="-container"],
+[class$="-content"] {
+  min-width: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+label,
+span {
+  overflow-wrap: anywhere;
 }

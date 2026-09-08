@@ -1,6 +1,7 @@
-export const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000"
-).replace(/\/$/, "");
+const configuredApiUrl = import.meta.env.VITE_API_URL;
+const defaultApiUrl = import.meta.env.DEV ? "http://localhost:5000" : "";
+
+export const API_URL = (configuredApiUrl || defaultApiUrl).replace(/\/$/, "");
 
 const API_BASE_URL = `${API_URL}/api`;
 
@@ -35,13 +36,7 @@ export const loginUser = async (email, password) => {
   });
 };
 
-export const registerUser = async ({
-  name,
-  email,
-  password,
-  role,
-  phone,
-}) => {
+export const registerUser = async ({ name, email, password, role, phone }) => {
   return apiRequest("/auth/register", {
     method: "POST",
     body: JSON.stringify({

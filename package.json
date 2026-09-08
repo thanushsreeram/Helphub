@@ -2,6 +2,7 @@
   "name": "helphub",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "HelpHub - Local Services and Worker Booking Platform",
   "scripts": {
     "build": "cd client && npm install && npm run build",

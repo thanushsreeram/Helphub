@@ -100,12 +100,13 @@ button {
 /* HERO */
 
 .hero-section {
+  width: 100%;
   max-width: 1240px;
   min-height: 670px;
   margin: auto;
   padding: 100px 45px;
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   gap: 70px;
   align-items: center;
 }
@@ -126,7 +127,7 @@ button {
 
 .hero-content h1 {
   margin: 0;
-  font-size: clamp(55px, 6vw, 82px);
+  font-size: clamp(42px, 6vw, 82px);
   line-height: 0.98;
   letter-spacing: -5px;
 }
@@ -205,6 +206,7 @@ button {
 }
 
 .worker-preview {
+  max-width: calc(100% - 32px);
   width: 320px;
   padding: 25px;
   background: white;
@@ -496,6 +498,11 @@ footer > span {
     padding: 70px 25px;
   }
 
+  .hero-content,
+  .hero-visual {
+    min-width: 0;
+  }
+
   .hero-visual {
     min-height: 400px;
   }
@@ -519,11 +526,36 @@ footer > span {
 
 @media (max-width: 600px) {
   .navbar {
+    min-height: 68px;
+    height: auto;
+    gap: 10px;
     padding: 0 20px;
   }
 
+  .navbar .logo {
+    gap: 6px !important;
+    font-size: 20px;
+    letter-spacing: -1px;
+  }
+
+  .navbar .logo img {
+    height: 32px !important;
+  }
+
+  .nav-actions {
+    gap: 5px;
+    flex-shrink: 1;
+  }
+
+  .login-btn,
+  .signup-btn {
+    padding: 9px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
   .hero-content h1 {
-    font-size: 55px;
+    font-size: clamp(42px, 14vw, 55px);
     letter-spacing: -3px;
   }
 
@@ -533,14 +565,17 @@ footer > span {
 
   .trust-row {
     gap: 20px;
+    justify-content: space-between;
   }
 
   .hero-visual {
     min-height: 350px;
+    border-radius: 24px;
   }
 
   .worker-preview {
-    width: 280px;
+    width: min(280px, calc(100% - 32px));
+    padding: 18px;
   }
 
   .card-one {
@@ -577,6 +612,33 @@ footer > span {
   footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 380px) {
+  .navbar {
+    padding: 0 12px;
+  }
+
+  .navbar .logo span {
+    display: none;
+  }
+
+  .login-btn,
+  .signup-btn {
+    padding-inline: 8px;
+  }
+
+  .trust-row {
+    gap: 10px;
+  }
+
+  .trust-row strong {
+    font-size: 19px;
+  }
+
+  .trust-row span {
+    font-size: 10px;
   }
 }
 /* =========================
@@ -913,6 +975,19 @@ footer > span {
 
   .auth-heading h1 {
     font-size: 28px;
+  }
+
+  .verification-modal {
+    padding: 24px 18px;
+  }
+
+  .verification-actions {
+    flex-direction: column;
+  }
+
+  .resend-code-btn {
+    min-height: 44px;
+    padding: 0 12px;
   }
 }
 .password-label {
