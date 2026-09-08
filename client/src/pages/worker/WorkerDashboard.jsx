@@ -94,7 +94,14 @@ function WorkerDashboard() {
     navigate("/login");
   };
 
-  const openActionModal = (bookingId, action, title, message, confirmText, variant) => {
+  const openActionModal = (
+    bookingId,
+    action,
+    title,
+    message,
+    confirmText,
+    variant,
+  ) => {
     setModalConfig({
       isOpen: true,
       title,
@@ -126,18 +133,18 @@ function WorkerDashboard() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || `Unable to ${action} booking`
-        );
+        throw new Error(data.message || `Unable to ${action} booking`);
       }
 
-      setMessage(`Booking #${bookingId} ${action === "reject" ? "rejected" : action + "ed"} successfully.`);
+      setMessage(
+        `Booking #${bookingId} ${action === "reject" ? "rejected" : action + "ed"} successfully.`,
+      );
       closeModal();
       await fetchBookings();
     } catch (error) {
@@ -163,20 +170,16 @@ function WorkerDashboard() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Unable to accept booking"
-        );
+        throw new Error(data.message || "Unable to accept booking");
       }
 
-      setMessage(
-        `Booking #${bookingId} accepted successfully.`
-      );
+      setMessage(`Booking #${bookingId} accepted successfully.`);
 
       await fetchBookings();
     } catch (error) {
@@ -188,17 +191,15 @@ function WorkerDashboard() {
   };
 
   const activeJobs = bookings.filter((booking) =>
-    ["accepted", "committed", "in_progress"].includes(
-      booking.status
-    )
+    ["accepted", "committed", "in_progress"].includes(booking.status),
   );
 
   const completedJobs = bookings.filter(
-    (booking) => booking.status === "completed"
+    (booking) => booking.status === "completed",
   );
 
   const pendingJobs = bookings.filter(
-    (booking) => booking.status === "pending"
+    (booking) => booking.status === "pending",
   );
 
   const handleSwitchToClient = async () => {
@@ -243,17 +244,28 @@ function WorkerDashboard() {
       {/* HEADER */}
       <header className="dashboard-header">
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <h1 onClick={() => handleLogoClick(navigate)} style={{ cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub" style={{ height: "40px", objectFit: "contain" }} />
+          <h1
+            onClick={() => handleLogoClick(navigate)}
+            style={{ cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub"
+              style={{ height: "40px", objectFit: "contain" }}
+            />
           </h1>
         </div>
 
         <div className="dashboard-actions">
-
           <button
             onClick={handleSwitchToClient}
             className="dashboard-action-button"
-            style={{ background: "#eef2ff", color: "#4f46e5", borderColor: "#c7d2fe" }}
+            style={{
+              background: "#eef2ff",
+              color: "#4f46e5",
+              borderColor: "#c7d2fe",
+            }}
             title="Switch to Client Portal"
           >
             <User size={17} />
@@ -264,9 +276,13 @@ function WorkerDashboard() {
             onClick={() => navigate("/worker/profile")}
             className="dashboard-action-button"
           >
-            {JSON.parse(localStorage.getItem("helphub_user") || "{}")?.avatar_url ? (
+            {JSON.parse(localStorage.getItem("helphub_user") || "{}")
+              ?.avatar_url ? (
               <img
-                src={JSON.parse(localStorage.getItem("helphub_user") || "{}").avatar_url}
+                src={
+                  JSON.parse(localStorage.getItem("helphub_user") || "{}")
+                    .avatar_url
+                }
                 alt="Profile"
                 style={{
                   width: "20px",
@@ -282,9 +298,7 @@ function WorkerDashboard() {
           </button>
 
           <button
-            onClick={() =>
-              navigate("/worker/specialization")
-            }
+            onClick={() => navigate("/worker/specialization")}
             className="dashboard-action-button"
           >
             <Wrench size={17} />
@@ -292,9 +306,7 @@ function WorkerDashboard() {
           </button>
 
           <button
-            onClick={() =>
-              navigate("/worker/availability")
-            }
+            onClick={() => navigate("/worker/availability")}
             className="dashboard-action-button"
           >
             <CalendarDays size={17} />
@@ -309,10 +321,7 @@ function WorkerDashboard() {
             {t("nav_my_jobs")}
           </button>
 
-          <button
-            onClick={handleLogout}
-            className="logout-button"
-          >
+          <button onClick={handleLogout} className="logout-button">
             <LogOut size={18} />
             {t("nav_logout")}
           </button>
@@ -322,14 +331,11 @@ function WorkerDashboard() {
       </header>
 
       <main className="dashboard-content">
-
         {/* WELCOME */}
         <section className="dashboard-welcome">
           <h2>Welcome back, Worker 👋</h2>
 
-          <p>
-            Manage your jobs and bookings from here.
-          </p>
+          <p>Manage your jobs and bookings from here.</p>
         </section>
 
         {/* SUCCESS MESSAGE */}
@@ -360,15 +366,12 @@ function WorkerDashboard() {
 
         {/* STATS */}
         <section className="dashboard-stats">
-
           <div className="stat-card">
             <Briefcase size={24} />
 
             <div>
               <span>Active Jobs</span>
-              <strong>
-                {activeJobs.length} / 3
-              </strong>
+              <strong>{activeJobs.length} / 3</strong>
             </div>
           </div>
 
@@ -377,9 +380,7 @@ function WorkerDashboard() {
 
             <div>
               <span>Pending</span>
-              <strong>
-                {pendingJobs.length}
-              </strong>
+              <strong>{pendingJobs.length}</strong>
             </div>
           </div>
 
@@ -388,70 +389,44 @@ function WorkerDashboard() {
 
             <div>
               <span>Completed</span>
-              <strong>
-                {completedJobs.length}
-              </strong>
+              <strong>{completedJobs.length}</strong>
             </div>
           </div>
-
         </section>
 
         {/* BOOKINGS */}
         <section className="bookings-section">
-
           <div className="section-header">
             <h2>My Bookings</h2>
 
-            <span>
-              {bookings.length} total
-            </span>
+            <span>{bookings.length} total</span>
           </div>
 
           {loading ? (
             <p>Loading bookings...</p>
           ) : bookings.length === 0 ? (
-
             <div className="empty-state">
               <Briefcase size={40} />
 
               <h3>No bookings yet</h3>
 
-              <p>
-                Your assigned bookings will appear here.
-              </p>
+              <p>Your assigned bookings will appear here.</p>
             </div>
-
           ) : (
-
             <div className="booking-list">
-
               {bookings.map((booking) => (
-
-                <div
-                  className="booking-card"
-                  key={booking.id}
-                >
-
+                <div className="booking-card" key={booking.id}>
                   {/* LEFT */}
                   <div className="booking-info">
+                    <h3>{booking.service_name}</h3>
 
-                    <h3>
-                      {booking.service_name}
-                    </h3>
+                    <p>Client: {booking.client_name}</p>
 
-                    <p>
-                      Client: {booking.client_name}
-                    </p>
-
-                    <p>
-                      Location: {booking.location}
-                    </p>
+                    <p>Location: {booking.location}</p>
 
                     <p>
                       Date:{" "}
-                      {new Date(
-                        booking.booking_date
-                      ).toLocaleString("en-IN")}
+                      {new Date(booking.booking_date).toLocaleString("en-IN")}
                     </p>
 
                     {booking.description && (
@@ -459,40 +434,25 @@ function WorkerDashboard() {
                         {booking.description}
                       </p>
                     )}
-
                   </div>
 
                   {/* RIGHT */}
                   <div className="booking-right">
-
                     <strong>
-                      ₹
-                      {Number(
-                        booking.total_cost || 0
-                      ).toFixed(2)}
+                      ₹{Number(booking.total_cost || 0).toFixed(2)}
                     </strong>
 
-                    <span
-                      className={`status status-${booking.status}`}
-                    >
-                      {booking.status.replace(
-                        "_",
-                        " "
-                      )}
+                    <span className={`status status-${booking.status}`}>
+                      {booking.status.replace("_", " ")}
                     </span>
 
                     {/* ACCEPT / REJECT */}
                     {booking.status === "pending" && (
                       <div className="booking-actions">
-
                         <button
                           className="accept-booking-button"
-                          onClick={() =>
-                            handleAccept(booking.id)
-                          }
-                          disabled={
-                            actionLoading === booking.id
-                          }
+                          onClick={() => handleAccept(booking.id)}
+                          disabled={actionLoading === booking.id}
                         >
                           <Check size={17} />
 
@@ -510,30 +470,60 @@ function WorkerDashboard() {
                               "Reject Booking",
                               "Are you sure you want to reject this booking?",
                               "Reject",
-                              "danger"
+                              "danger",
                             )
                           }
-                          disabled={
-                            actionLoading === booking.id
-                          }
+                          disabled={actionLoading === booking.id}
                         >
                           <X size={17} />
                           Reject
                         </button>
-
                       </div>
                     )}
 
                     {/* COMMITTED */}
-                    {["accepted", "committed"].includes(booking.status) && (
+                    {/* ACCEPTED */}
+                    {booking.status === "accepted" && (
                       <div className="booking-actions">
-
                         <div className="booking-accepted-label">
                           <CheckCircle size={17} />
                           Booking Accepted
                         </div>
 
                         <button
+                          type="button"
+                          className="commit-button"
+                          onClick={() =>
+                            openActionModal(
+                              booking.id,
+                              "commit",
+                              "Commit to Job",
+                              "Are you ready to commit to this job?",
+                              "Commit to Job",
+                              "primary",
+                            )
+                          }
+                          disabled={actionLoading === booking.id}
+                        >
+                          <CheckCircle size={17} />
+
+                          {actionLoading === booking.id
+                            ? "Committing..."
+                            : "Commit to Job"}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* COMMITTED */}
+                    {booking.status === "committed" && (
+                      <div className="booking-actions">
+                        <div className="booking-accepted-label">
+                          <CheckCircle size={17} />
+                          Booking Committed
+                        </div>
+
+                        <button
+                          type="button"
                           className="start-job-button"
                           onClick={() =>
                             openActionModal(
@@ -542,12 +532,10 @@ function WorkerDashboard() {
                               "Start Job",
                               "Are you ready to start this job?",
                               "Start Job",
-                              "primary"
+                              "primary",
                             )
                           }
-                          disabled={
-                            actionLoading === booking.id
-                          }
+                          disabled={actionLoading === booking.id}
                         >
                           <Play size={17} />
 
@@ -555,14 +543,12 @@ function WorkerDashboard() {
                             ? "Starting..."
                             : "Start Job"}
                         </button>
-
                       </div>
                     )}
 
                     {/* IN PROGRESS */}
                     {booking.status === "in_progress" && (
                       <div className="booking-actions">
-
                         <div className="job-progress-label">
                           <Clock size={17} />
                           Job In Progress
@@ -577,12 +563,10 @@ function WorkerDashboard() {
                               "Complete Job",
                               "Are you sure you want to mark this job as completed?",
                               "Complete Job",
-                              "success"
+                              "success",
                             )
                           }
-                          disabled={
-                            actionLoading === booking.id
-                          }
+                          disabled={actionLoading === booking.id}
                         >
                           <CheckCircle size={17} />
 
@@ -590,7 +574,6 @@ function WorkerDashboard() {
                             ? "Completing..."
                             : "Complete Job"}
                         </button>
-
                       </div>
                     )}
 
@@ -601,19 +584,12 @@ function WorkerDashboard() {
                         Job Completed
                       </div>
                     )}
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           )}
-
         </section>
-
       </main>
     </div>
   );

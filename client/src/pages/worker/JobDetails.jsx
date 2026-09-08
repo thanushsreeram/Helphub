@@ -51,14 +51,11 @@ function JobDetails() {
     try {
       setError("");
 
-      const response = await fetch(
-        `${API_URL}/api/bookings/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/api/bookings/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -91,7 +88,7 @@ function JobDetails() {
     confirmText = "Confirm",
     variant = "primary",
     requireReason = false,
-    body = null
+    body = null,
   ) => {
     setReasonText("");
     setModalConfig({
@@ -126,19 +123,16 @@ function JobDetails() {
     setError("");
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/bookings/${id}/${action}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          ...(payload && {
-            body: JSON.stringify(payload),
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/bookings/${id}/${action}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        ...(payload && {
+          body: JSON.stringify(payload),
+        }),
+      });
 
       const data = await response.json();
 
@@ -240,8 +234,16 @@ function JobDetails() {
       {/* HEADER */}
       <header className="job-details-header">
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <h1 onClick={() => handleLogoClick(navigate)} style={{ cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub" style={{ height: "40px", objectFit: "contain" }} />
+          <h1
+            onClick={() => handleLogoClick(navigate)}
+            style={{ cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub"
+              style={{ height: "40px", objectFit: "contain" }}
+            />
           </h1>
         </div>
 
@@ -261,9 +263,7 @@ function JobDetails() {
         {/* TOP SECTION */}
         <section className="job-details-top">
           <div>
-            <p className="job-eyebrow">
-              BOOKING #{booking.id}
-            </p>
+            <p className="job-eyebrow">BOOKING #{booking.id}</p>
 
             <h2>{booking.service_name}</h2>
 
@@ -272,9 +272,7 @@ function JobDetails() {
             </p>
           </div>
 
-          <span
-            className={`large-status status-${booking.status}`}
-          >
+          <span className={`large-status status-${booking.status}`}>
             {formatStatus(booking.status)}
           </span>
         </section>
@@ -306,9 +304,7 @@ function JobDetails() {
                 <div>
                   <small>Client</small>
 
-                  <strong>
-                    {booking.client_name || "Not available"}
-                  </strong>
+                  <strong>{booking.client_name || "Not available"}</strong>
                 </div>
               </div>
 
@@ -321,9 +317,7 @@ function JobDetails() {
                 <div>
                   <small>Location</small>
 
-                  <strong>
-                    {booking.location || "Not provided"}
-                  </strong>
+                  <strong>{booking.location || "Not provided"}</strong>
                 </div>
               </div>
 
@@ -336,9 +330,7 @@ function JobDetails() {
                 <div>
                   <small>Booking Date & Time</small>
 
-                  <strong>
-                    {formatDateTime(booking.booking_date)}
-                  </strong>
+                  <strong>{formatDateTime(booking.booking_date)}</strong>
                 </div>
               </div>
 
@@ -352,9 +344,7 @@ function JobDetails() {
                   <div>
                     <small>Booking Created</small>
 
-                    <strong>
-                      {formatDateTime(booking.created_at)}
-                    </strong>
+                    <strong>{formatDateTime(booking.created_at)}</strong>
                   </div>
                 </div>
               )}
@@ -372,22 +362,14 @@ function JobDetails() {
               <div>
                 <span>Labour Cost</span>
 
-                <strong>
-                  ₹
-                  {Number(
-                    booking.labour_cost || 0
-                  ).toFixed(2)}
-                </strong>
+                <strong>₹{Number(booking.labour_cost || 0).toFixed(2)}</strong>
               </div>
 
               <div>
                 <span>Material Cost</span>
 
                 <strong>
-                  ₹
-                  {Number(
-                    booking.material_cost || 0
-                  ).toFixed(2)}
+                  ₹{Number(booking.material_cost || 0).toFixed(2)}
                 </strong>
               </div>
 
@@ -395,22 +377,14 @@ function JobDetails() {
                 <span>Travel Charge</span>
 
                 <strong>
-                  ₹
-                  {Number(
-                    booking.travel_charge || 0
-                  ).toFixed(2)}
+                  ₹{Number(booking.travel_charge || 0).toFixed(2)}
                 </strong>
               </div>
 
               <div className="total-row">
                 <span>Total</span>
 
-                <strong>
-                  ₹
-                  {Number(
-                    booking.total_cost || 0
-                  ).toFixed(2)}
-                </strong>
+                <strong>₹{Number(booking.total_cost || 0).toFixed(2)}</strong>
               </div>
             </div>
           </section>
@@ -435,9 +409,7 @@ function JobDetails() {
             <div>
               <h3>Job Actions</h3>
 
-              <p>
-                Manage this booking according to its current status.
-              </p>
+              <p>Manage this booking according to its current status.</p>
             </div>
 
             <button
@@ -463,7 +435,7 @@ function JobDetails() {
                       "Accept Booking",
                       "Accept this job?\n\nOnce accepted, you are committed to completing the booking unless a legitimate emergency cancellation is required.",
                       "Accept Job",
-                      "success"
+                      "success",
                     )
                   }
                 >
@@ -480,7 +452,7 @@ function JobDetails() {
                       "Reject Job",
                       "Are you sure you want to reject this booking request?",
                       "Reject Job",
-                      "danger"
+                      "danger",
                     )
                   }
                 >
@@ -501,7 +473,7 @@ function JobDetails() {
                     "Commit to Job",
                     "Commit to starting this job?",
                     "Commit",
-                    "primary"
+                    "primary",
                   )
                 }
               >
@@ -514,15 +486,16 @@ function JobDetails() {
             {booking.status === "committed" && (
               <>
                 <button
+                  type="button"
                   className="start-button"
-                  disabled={actionLoading}
+                  disabled={loading}
                   onClick={() =>
-                    openActionModal(
+                    openAction(
                       "start",
                       "Start Job",
                       "Are you ready to start work on this booking now?",
                       "Start Job",
-                      "primary"
+                      "primary",
                     )
                   }
                 >
@@ -540,7 +513,7 @@ function JobDetails() {
                       "Emergency cancellation should only be used for unexpected emergencies. Please state the reason below:",
                       "Request Emergency Cancel",
                       "danger",
-                      true
+                      true,
                     )
                   }
                 >
@@ -562,7 +535,7 @@ function JobDetails() {
                       "Complete Job",
                       "Mark this job as completed?\n\nEnsure all service tasks have been completed to satisfaction before proceeding.",
                       "Mark Completed",
-                      "success"
+                      "success",
                     )
                   }
                 >
@@ -580,7 +553,7 @@ function JobDetails() {
                       "Emergency cancellation should only be used for unexpected emergencies. Please state the reason below:",
                       "Request Emergency Cancel",
                       "danger",
-                      true
+                      true,
                     )
                   }
                 >
@@ -592,7 +565,14 @@ function JobDetails() {
 
             {/* COMPLETED */}
             {booking.status === "completed" && (
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
                 <div className="completed-message">
                   <CheckCircle size={21} />
 
@@ -655,12 +635,9 @@ function JobDetails() {
           <div className="workflow-steps">
             <div
               className={`workflow-step ${
-                [
-                  "pending",
-                  "committed",
-                  "in_progress",
-                  "completed",
-                ].includes(booking.status)
+                ["pending", "committed", "in_progress", "completed"].includes(
+                  booking.status,
+                )
                   ? "active"
                   : ""
               }`}
@@ -675,11 +652,9 @@ function JobDetails() {
 
             <div
               className={`workflow-step ${
-                [
-                  "committed",
-                  "in_progress",
-                  "completed",
-                ].includes(booking.status)
+                ["committed", "in_progress", "completed"].includes(
+                  booking.status,
+                )
                   ? "active"
                   : ""
               }`}
@@ -694,9 +669,7 @@ function JobDetails() {
 
             <div
               className={`workflow-step ${
-                ["in_progress", "completed"].includes(
-                  booking.status
-                )
+                ["in_progress", "completed"].includes(booking.status)
                   ? "active"
                   : ""
               }`}
@@ -711,9 +684,7 @@ function JobDetails() {
 
             <div
               className={`workflow-step ${
-                booking.status === "completed"
-                  ? "active"
-                  : ""
+                booking.status === "completed" ? "active" : ""
               }`}
             >
               <span>4</span>
