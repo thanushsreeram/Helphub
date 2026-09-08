@@ -1,6 +1,7 @@
+import "dotenv/config";
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import cluster from "node:cluster";
@@ -8,7 +9,10 @@ import os from "node:os";
 import crypto from "node:crypto";
 
 import pool from "./src/config/database.js";
-import { initializeDatabase, ensureDbInitialized } from "./src/config/initDb.js";
+import {
+  initializeDatabase,
+  ensureDbInitialized,
+} from "./src/config/initDb.js";
 
 import authRoutes from "./src/routes/authRoutes.js";
 import userRoutes from "./src/routes/userRoutes.js";
@@ -16,8 +20,6 @@ import workerRoutes from "./src/routes/workerRoutes.js";
 import bookingRoutes from "./src/routes/bookingRoutes.js";
 import paymentRoutes from "./src/routes/paymentRoutes.js";
 import reviewRoutes from "./src/routes/reviewRoutes.js";
-
-dotenv.config();
 
 export function createApp() {
   const app = express();
@@ -116,7 +118,10 @@ export function createApp() {
       await ensureDbInitialized();
       next();
     } catch (error) {
-      console.error("❌ DB Auto-Init middleware error:", error.message || error);
+      console.error(
+        "❌ DB Auto-Init middleware error:",
+        error.message || error,
+      );
       next(error);
     }
   });
