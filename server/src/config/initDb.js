@@ -1,4 +1,15 @@
-import pool from "./database.js";
+let initDbPromise = null;
+
+export async function ensureDbInitialized() {
+  if (!initDbPromise) {
+    initDbPromise = initializeDatabase().catch((err) => {
+      console.error("Failed to initialize database schema:", err);
+      initDbPromise = null;
+      throw err;
+    });
+  }
+  return initDbPromise;
+}
 
 export async function initializeDatabase() {
   try {

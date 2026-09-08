@@ -8,7 +8,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 
 import pool from "./src/config/database.js";
-import { initializeDatabase } from "./src/config/initDb.js";
+import { initializeDatabase, ensureDbInitialized } from "./src/config/initDb.js";
 
 import authRoutes from "./src/routes/authRoutes.js";
 import userRoutes from "./src/routes/userRoutes.js";
@@ -18,9 +18,6 @@ import paymentRoutes from "./src/routes/paymentRoutes.js";
 import reviewRoutes from "./src/routes/reviewRoutes.js";
 
 dotenv.config();
-initializeDatabase().catch((err) =>
-  console.error("Failed to initialize database schema:", err),
-);
 
 export function createApp() {
   const app = express();
@@ -112,6 +109,17 @@ export function createApp() {
   // 4. JSON Payload Parser with bounded request bodies.
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+
+  // 4.5. Guarantee Database Schema Initialization completes before processing DB routes
+  app.use(async (req, res, next) => {
+    try {
+      await ensureDbInitialized();
+      next();
+    } catch (error) {
+      console.error("❌ DB Auto-Init middleware error:", error.message || error);
+      next(error);
+    }
+  });
 
   // 5. In-Memory Micro-Cache for Services Endpoint
   let cachedServices = null;
