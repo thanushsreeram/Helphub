@@ -350,13 +350,13 @@ function ClientBookingDetails() {
 
               <div className="summary-row">
                 <span>Labour Rate</span>
-                <span>₹{booking.hourly_rate || 0} / hr</span>
+                <span>₹{booking.labour_cost || 0}</span>
               </div>
 
               <div className="summary-row">
                 <span>Total Amount</span>
                 <strong className="total-price">
-                  ₹{booking.total_price || 0}
+                  ₹{booking.total_cost || 0}
                 </strong>
               </div>
 

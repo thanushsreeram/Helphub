@@ -48,9 +48,7 @@ function WorkerProfile() {
   });
 
   const token = localStorage.getItem("helphub_token");
-  const storedUser = JSON.parse(
-    localStorage.getItem("helphub_user") || "{}"
-  );
+  const storedUser = JSON.parse(localStorage.getItem("helphub_user") || "{}");
 
   const fetchProfile = async () => {
     if (!token) {
@@ -61,14 +59,11 @@ function WorkerProfile() {
     try {
       setLoading(true);
       setError("");
-      const response = await fetch(
-        `${API_URL}/api/workers/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/api/workers/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -157,10 +152,7 @@ function WorkerProfile() {
       return;
     }
 
-    if (
-      formData.hourly_rate === "" ||
-      Number(formData.hourly_rate) < 0
-    ) {
+    if (formData.hourly_rate === "" || Number(formData.hourly_rate) < 0) {
       setFormError("Please enter a valid hourly rate.");
       return;
     }
@@ -176,32 +168,27 @@ function WorkerProfile() {
     try {
       setSaving(true);
 
-      const response = await fetch(
-        `${API_URL}/api/workers/profile`,
-        {
-          method: profile ? "PUT" : "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name.trim(),
-            phone: formData.phone.trim(),
-            bio: formData.bio.trim(),
-            location: formData.location.trim(),
-            hourly_rate: Number(formData.hourly_rate),
-            experience_years: Number(formData.experience_years),
-            avatar_url: formData.avatar_url,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/workers/profile`, {
+        method: profile ? "PUT" : "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          bio: formData.bio.trim(),
+          location: formData.location.trim(),
+          hourly_rate: Number(formData.hourly_rate),
+          experience_years: Number(formData.experience_years),
+          avatar_url: formData.avatar_url,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to update profile"
-        );
+        throw new Error(data.message || "Failed to update profile");
       }
 
       if (profile) {
@@ -221,7 +208,7 @@ function WorkerProfile() {
       setSaveMessage(
         profile
           ? "Profile updated successfully!"
-          : "Profile created successfully!"
+          : "Profile created successfully!",
       );
 
       setTimeout(() => {
@@ -271,8 +258,16 @@ function WorkerProfile() {
       {/* HEADER */}
       <header className="profile-header">
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <h1 onClick={() => handleLogoClick(navigate)} style={{ cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub" style={{ height: "40px", objectFit: "contain" }} />
+          <h1
+            onClick={() => handleLogoClick(navigate)}
+            style={{ cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub"
+              style={{ height: "40px", objectFit: "contain" }}
+            />
           </h1>
         </div>
 
@@ -297,9 +292,7 @@ function WorkerProfile() {
               <User size={28} />
               My Profile
             </h2>
-            <p>
-              Manage your professional information and HelpHub account.
-            </p>
+            <p>Manage your professional information and HelpHub account.</p>
           </div>
         </div>
 
@@ -321,15 +314,11 @@ function WorkerProfile() {
 
             <div className="profile-name-section">
               <h2>{profile?.name || "Worker"}</h2>
-              <p className="worker-role">
-                HelpHub Professional Worker
-              </p>
+              <p className="worker-role">HelpHub Professional Worker</p>
 
               <div
                 className={`profile-status ${
-                  profile?.is_available
-                    ? "available"
-                    : "unavailable"
+                  profile?.is_available ? "available" : "unavailable"
                 }`}
               >
                 <CircleCheck size={17} />
@@ -352,9 +341,7 @@ function WorkerProfile() {
 
               <button
                 className="profile-action-button"
-                onClick={() =>
-                  navigate("/worker/specialization")
-                }
+                onClick={() => navigate("/worker/specialization")}
               >
                 <Wrench size={17} />
                 Specialization
@@ -362,9 +349,7 @@ function WorkerProfile() {
 
               <button
                 className="profile-action-button"
-                onClick={() =>
-                  navigate("/worker/availability")
-                }
+                onClick={() => navigate("/worker/availability")}
               >
                 <CalendarDays size={17} />
                 Availability
@@ -379,9 +364,7 @@ function WorkerProfile() {
                 <Star size={20} />
               </div>
               <div>
-                <strong>
-                  {formatRating(profile?.rating)}
-                </strong>
+                <strong>{formatRating(profile?.rating)}</strong>
                 <span>Rating</span>
               </div>
             </div>
@@ -391,9 +374,7 @@ function WorkerProfile() {
                 <Briefcase size={20} />
               </div>
               <div>
-                <strong>
-                  {profile?.total_reviews || 0}
-                </strong>
+                <strong>{profile?.total_reviews || 0}</strong>
                 <span>Reviews</span>
               </div>
             </div>
@@ -403,9 +384,7 @@ function WorkerProfile() {
                 <IndianRupee size={20} />
               </div>
               <div>
-                <strong>
-                  ₹{Number(profile?.hourly_rate || 0)}
-                </strong>
+                <strong>₹{Number(profile?.hourly_rate || 0)}</strong>
                 <span>Per Hour</span>
               </div>
             </div>
@@ -415,9 +394,7 @@ function WorkerProfile() {
                 <Briefcase size={20} />
               </div>
               <div>
-                <strong>
-                  {profile?.experience_years || 0}
-                </strong>
+                <strong>{profile?.experience_years || 0}</strong>
                 <span>Years Experience</span>
               </div>
             </div>
@@ -435,9 +412,7 @@ function WorkerProfile() {
                 <Mail size={22} />
                 <div>
                   <span>Email</span>
-                  <strong>
-                    {profile?.email || "Not available"}
-                  </strong>
+                  <strong>{profile?.email || "Not available"}</strong>
                 </div>
               </div>
 
@@ -445,9 +420,7 @@ function WorkerProfile() {
                 <Phone size={22} />
                 <div>
                   <span>Phone</span>
-                  <strong>
-                    {profile?.phone || "Not provided"}
-                  </strong>
+                  <strong>{profile?.phone || "Not provided"}</strong>
                 </div>
               </div>
 
@@ -455,9 +428,7 @@ function WorkerProfile() {
                 <MapPin size={22} />
                 <div>
                   <span>Location</span>
-                  <strong>
-                    {profile?.location || "Not provided"}
-                  </strong>
+                  <strong>{profile?.location || "Not provided"}</strong>
                 </div>
               </div>
 
@@ -500,8 +471,8 @@ function WorkerProfile() {
                 <div>
                   <span>Customer Rating</span>
                   <strong>
-                    ⭐ {formatRating(profile?.rating)}{" "}
-                    ({profile?.total_reviews || 0} reviews)
+                    ⭐ {formatRating(profile?.rating)} (
+                    {profile?.total_reviews || 0} reviews)
                   </strong>
                 </div>
               </div>
@@ -534,54 +505,42 @@ function WorkerProfile() {
           <div className="management-grid">
             <button
               className="management-card"
-              onClick={() =>
-                navigate("/worker/specialization")
-              }
+              onClick={() => navigate("/worker/specialization")}
             >
               <div className="management-icon">
                 <Wrench size={22} />
               </div>
               <div>
                 <strong>Specialization</strong>
-                <span>
-                  Manage your services and skills
-                </span>
+                <span>Manage your services and skills</span>
               </div>
               <ChevronRight size={20} />
             </button>
 
             <button
               className="management-card"
-              onClick={() =>
-                navigate("/worker/availability")
-              }
+              onClick={() => navigate("/worker/availability")}
             >
               <div className="management-icon">
                 <CalendarDays size={22} />
               </div>
               <div>
                 <strong>Working Availability</strong>
-                <span>
-                  Set your working days and hours
-                </span>
+                <span>Set your working days and hours</span>
               </div>
               <ChevronRight size={20} />
             </button>
 
             <button
               className="management-card"
-              onClick={() =>
-                navigate("/worker/dashboard")
-              }
+              onClick={() => navigate("/worker/dashboard")}
             >
               <div className="management-icon">
                 <Settings size={22} />
               </div>
               <div>
                 <strong>Worker Dashboard</strong>
-                <span>
-                  View jobs and booking activity
-                </span>
+                <span>View jobs and booking activity</span>
               </div>
               <ChevronRight size={20} />
             </button>
@@ -596,16 +555,12 @@ function WorkerProfile() {
             {/* MODAL HEADER */}
             <div className="edit-modal-header">
               <div>
-                <span className="edit-modal-label">
-                  WORKER ACCOUNT
-                </span>
+                <span className="edit-modal-label">WORKER ACCOUNT</span>
                 <h2>
                   <Edit3 size={22} />
                   Edit Profile
                 </h2>
-                <p>
-                  Update the information clients see about you.
-                </p>
+                <p>Update the information clients see about you.</p>
               </div>
 
               <button
@@ -619,16 +574,13 @@ function WorkerProfile() {
             </div>
 
             {/* FORM */}
-            <form
-              className="edit-profile-form"
-              onSubmit={handleSaveProfile}
-            >
+            <form className="edit-profile-form" onSubmit={handleSaveProfile}>
               {/* AVATAR UPLOAD */}
               <div className="form-group avatar-form-group">
                 <label>Profile Picture</label>
                 <AvatarUpload
-                  currentAvatar={formData.avatar_url}
-                  onAvatarChange={(newAvatar) =>
+                  value={formData.avatar_url}
+                  onChange={(newAvatar) =>
                     setFormData((prev) => ({
                       ...prev,
                       avatar_url: newAvatar,
@@ -666,9 +618,7 @@ function WorkerProfile() {
                     disabled
                   />
                 </div>
-                <small>
-                  Email cannot be changed from your profile.
-                </small>
+                <small>Email cannot be changed from your profile.</small>
               </div>
 
               {/* PHONE */}
@@ -709,9 +659,7 @@ function WorkerProfile() {
               {/* HOURLY RATE & EXPERIENCE */}
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="hourly_rate">
-                    Hourly Rate (₹)
-                  </label>
+                  <label htmlFor="hourly_rate">Hourly Rate (₹)</label>
                   <div className="input-with-icon">
                     <IndianRupee size={18} />
                     <input
@@ -728,9 +676,7 @@ function WorkerProfile() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="experience_years">
-                    Experience (Years)
-                  </label>
+                  <label htmlFor="experience_years">Experience (Years)</label>
                   <div className="input-with-icon">
                     <Briefcase size={18} />
                     <input
@@ -766,9 +712,7 @@ function WorkerProfile() {
 
               {/* ERROR */}
               {formError && (
-                <div className="form-error-message">
-                  {formError}
-                </div>
+                <div className="form-error-message">{formError}</div>
               )}
 
               {/* SUCCESS */}

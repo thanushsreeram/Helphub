@@ -1,12 +1,17 @@
 import pool from "../config/database.js";
 
 export const createWorkerProfile = async (req, res) => {
+  const client = await pool.connect();
+
   try {
     const {
+      name,
+      phone,
       bio,
       location,
       hourly_rate,
       experience_years,
+      avatar_url,
     } = req.body;
 
     const userId = req.user.userId;
@@ -14,7 +19,7 @@ export const createWorkerProfile = async (req, res) => {
     // Check whether profile already exists
     const existingProfile = await pool.query(
       `SELECT id FROM worker_profiles WHERE user_id = $1`,
-      [userId]
+      [userId],
     );
 
     if (existingProfile.rows.length > 0) {
@@ -27,19 +32,26 @@ export const createWorkerProfile = async (req, res) => {
     const hourlyRate = Number(hourly_rate || 0);
     const experienceYears = Number(experience_years || 0);
 
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    await client.query(
+      `UPDATE users
+       SET name = COALESCE($1, name),
+           phone = COALESCE($2, phone),
+           avatar_url = COALESCE($3, avatar_url)
+       WHERE id = $4`,
+      [name?.trim() || null, phone?.trim() || null, avatar_url || null, userId],
+    );
+
+    const result = await client.query(
       `INSERT INTO worker_profiles
        (user_id, bio, location, hourly_rate, experience_years)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [
-        userId,
-        bio || null,
-        location || null,
-        hourlyRate,
-        experienceYears,
-      ]
+      [userId, bio || null, location || null, hourlyRate, experienceYears],
     );
+
+    await client.query("COMMIT");
 
     res.status(201).json({
       success: true,
@@ -47,12 +59,15 @@ export const createWorkerProfile = async (req, res) => {
       profile: result.rows[0],
     });
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error("Create worker profile error:", error);
 
     res.status(500).json({
       success: false,
       message: "Failed to create worker profile",
     });
+  } finally {
+    client.release();
   }
 };
 
@@ -65,11 +80,12 @@ export const getMyWorkerProfile = async (req, res) => {
         wp.*,
         u.name,
         u.email,
-        u.phone
+        u.phone,
+        u.avatar_url
        FROM worker_profiles wp
        JOIN users u ON wp.user_id = u.id
        WHERE wp.user_id = $1`,
-      [userId]
+      [userId],
     );
 
     if (result.rows.length === 0) {
@@ -101,6 +117,7 @@ export const updateWorkerProfile = async (req, res) => {
     const {
       name,
       phone,
+      avatar_url,
       bio,
       location,
       hourly_rate,
@@ -146,7 +163,7 @@ export const updateWorkerProfile = async (req, res) => {
       `SELECT id
        FROM worker_profiles
        WHERE user_id = $1`,
-      [userId]
+      [userId],
     );
 
     if (workerResult.rows.length === 0) {
@@ -164,13 +181,10 @@ export const updateWorkerProfile = async (req, res) => {
     await client.query(
       `UPDATE users
        SET name = $1,
-           phone = $2
-       WHERE id = $3`,
-      [
-        name.trim(),
-        phone.trim(),
-        userId,
-      ]
+           phone = $2,
+           avatar_url = $3
+         WHERE id = $4`,
+      [name.trim(), phone.trim(), avatar_url || null, userId],
     );
 
     // Update worker professional information
@@ -187,7 +201,7 @@ export const updateWorkerProfile = async (req, res) => {
         rate,
         experience,
         workerId,
-      ]
+      ],
     );
 
     await client.query("COMMIT");
@@ -198,12 +212,13 @@ export const updateWorkerProfile = async (req, res) => {
         wp.*,
         u.name,
         u.email,
-        u.phone
+        u.phone,
+        u.avatar_url
        FROM worker_profiles wp
        JOIN users u
          ON wp.user_id = u.id
        WHERE wp.user_id = $1`,
-      [userId]
+      [userId],
     );
 
     return res.json({
@@ -214,10 +229,7 @@ export const updateWorkerProfile = async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK");
 
-    console.error(
-      "Update worker profile error:",
-      error
-    );
+    console.error("Update worker profile error:", error);
 
     return res.status(500).json({
       success: false,
@@ -258,7 +270,7 @@ export const addWorkerServices = async (req, res) => {
     // Find worker profile
     const workerResult = await client.query(
       `SELECT id FROM worker_profiles WHERE user_id = $1`,
-      [userId]
+      [userId],
     );
 
     if (workerResult.rows.length === 0) {
@@ -274,7 +286,7 @@ export const addWorkerServices = async (req, res) => {
     // Check that all services exist
     const servicesResult = await client.query(
       `SELECT id FROM services WHERE id = ANY($1::int[])`,
-      [serviceIds]
+      [serviceIds],
     );
 
     if (servicesResult.rows.length !== serviceIds.length) {
@@ -286,15 +298,14 @@ export const addWorkerServices = async (req, res) => {
     }
 
     // Remove previous services
-    await client.query(
-      `DELETE FROM worker_services WHERE worker_id = $1`,
-      [workerId]
-    );
+    await client.query(`DELETE FROM worker_services WHERE worker_id = $1`, [
+      workerId,
+    ]);
 
     await client.query(
       `INSERT INTO worker_services (worker_id, service_id)
        SELECT $1, UNNEST($2::int[])`,
-      [workerId, serviceIds]
+      [workerId, serviceIds],
     );
 
     await client.query("COMMIT");
@@ -316,7 +327,6 @@ export const addWorkerServices = async (req, res) => {
   }
 };
 
-
 export const getMyWorkerServices = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -334,7 +344,7 @@ export const getMyWorkerServices = async (req, res) => {
          ON ws.service_id = s.id
        WHERE wp.user_id = $1
        ORDER BY s.name`,
-      [userId]
+      [userId],
     );
 
     res.json({
@@ -421,9 +431,7 @@ export const searchWorkers = async (req, res) => {
 
     if (location) {
       values.push(location);
-      conditions.push(
-        `wp.location ILIKE '%' || $${values.length} || '%'`
-      );
+      conditions.push(`wp.location ILIKE '%' || $${values.length} || '%'`);
     }
 
     if (conditions.length > 0) {
@@ -477,7 +485,13 @@ export const updateWorkerAvailability = async (req, res) => {
     }
 
     const validDays = new Set([
-      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
     ]);
     const submittedDays = new Set();
 
@@ -492,7 +506,8 @@ export const updateWorkerAvailability = async (req, res) => {
       ) {
         return res.status(400).json({
           success: false,
-          message: "Each availability entry needs a valid day and working hours",
+          message:
+            "Each availability entry needs a valid day and working hours",
         });
       }
 
@@ -506,7 +521,7 @@ export const updateWorkerAvailability = async (req, res) => {
       `SELECT id
        FROM worker_profiles
        WHERE user_id = $1`,
-      [userId]
+      [userId],
     );
 
     if (workerResult.rows.length === 0) {
@@ -523,7 +538,7 @@ export const updateWorkerAvailability = async (req, res) => {
     await client.query(
       `DELETE FROM worker_availability
        WHERE worker_id = $1`,
-      [workerId]
+      [workerId],
     );
 
     // Insert new availability
@@ -542,7 +557,7 @@ export const updateWorkerAvailability = async (req, res) => {
           schedule_type === "month" ? valid_month : null,
           schedule_type === "custom" ? start_date : null,
           schedule_type === "custom" ? end_date : null,
-        ]
+        ],
       );
     }
 
@@ -558,10 +573,7 @@ export const updateWorkerAvailability = async (req, res) => {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error(
-      "Update worker availability error:",
-      error
-    );
+    console.error("Update worker availability error:", error);
 
     res.status(500).json({
       success: false,
@@ -571,7 +583,6 @@ export const updateWorkerAvailability = async (req, res) => {
     client.release();
   }
 };
-
 
 export const getWorkerAvailability = async (req, res) => {
   try {
@@ -602,7 +613,7 @@ export const getWorkerAvailability = async (req, res) => {
            WHEN 'Saturday' THEN 6
            WHEN 'Sunday' THEN 7
          END`,
-      [userId]
+      [userId],
     );
 
     const firstRow = result.rows[0] || {};
@@ -620,10 +631,7 @@ export const getWorkerAvailability = async (req, res) => {
       end_date,
     });
   } catch (error) {
-    console.error(
-      "Get worker availability error:",
-      error
-    );
+    console.error("Get worker availability error:", error);
 
     res.status(500).json({
       success: false,
@@ -667,7 +675,7 @@ export const getPublicWorkerAvailability = async (req, res) => {
            WHEN 'Saturday' THEN 6
            WHEN 'Sunday' THEN 7
          END`,
-      [workerId]
+      [workerId],
     );
 
     const firstRow = result.rows[0] || {};
@@ -686,10 +694,7 @@ export const getPublicWorkerAvailability = async (req, res) => {
       end_date,
     });
   } catch (error) {
-    console.error(
-      "Get public worker availability error:",
-      error
-    );
+    console.error("Get public worker availability error:", error);
 
     return res.status(500).json({
       success: false,

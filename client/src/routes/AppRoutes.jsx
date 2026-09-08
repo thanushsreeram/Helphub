@@ -23,6 +23,7 @@ import ClientPayment from "../pages/client/ClientPayment";
 import ClientBookingDetails from "../pages/client/ClientBookingDetails";
 import ClientReview from "../pages/client/ClientReview";
 import ClientProfile from "../pages/client/ClientProfile";
+import NotFound from "../pages/NotFound";
 
 function AppRoutes() {
   return (
@@ -38,61 +39,22 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Worker */}
-      <Route
-        path="/worker/dashboard"
-        element={<WorkerDashboard />}
-      />
+      <Route path="/worker/dashboard" element={<WorkerDashboard />} />
 
-      <Route
-        path="/worker/profile"
-        element={<WorkerProfile />}
-      />
+      <Route path="/worker/profile" element={<WorkerProfile />} />
 
-      <Route
-        path="/worker/specialization"
-        element={<Specialization />}
-      />
+      <Route path="/worker/specialization" element={<Specialization />} />
 
-      <Route
-        path="/worker/availability"
-        element={<Availability />}
-      />
-      <Route
-        path="/worker/jobs"
-        element={<MyJobs />}
-      />
-      <Route
-        path="/worker/jobs/:id"
-        element={<JobDetails />}
-      />
-      <Route
-        path="/client/dashboard"
-        element={<ClientDashboard />}
-      />
-      <Route
-        path="/client/profile"
-        element={<ClientProfile />}
-      />
-      <Route
-        path="/client/workers"
-        element={<BrowseWorkers />}
-      />
-      <Route
-        path="/client/worker/:workerId"
-        element={<WorkerDetails />}
-      />
-      <Route
-        path="/client/book/:workerId"
-        element={<BookingForm />}
-      />
-      <Route
-        path="/client/bookings"
-        element={<ClientBookings />}
-      />
-      <Route
-        path="/client/payment/:bookingId"
-        element={<ClientPayment />}
-      />
+      <Route path="/worker/availability" element={<Availability />} />
+      <Route path="/worker/jobs" element={<MyJobs />} />
+      <Route path="/worker/jobs/:id" element={<JobDetails />} />
+      <Route path="/client/dashboard" element={<ClientDashboard />} />
+      <Route path="/client/profile" element={<ClientProfile />} />
+      <Route path="/client/workers" element={<BrowseWorkers />} />
+      <Route path="/client/worker/:workerId" element={<WorkerDetails />} />
+      <Route path="/client/book/:workerId" element={<BookingForm />} />
+      <Route path="/client/bookings" element={<ClientBookings />} />
+      <Route path="/client/payment/:bookingId" element={<ClientPayment />} />
       <Route
         path="/client/bookings/:bookingId"
         element={<ClientBookingDetails />}
@@ -101,10 +63,9 @@ function AppRoutes() {
         path="/client/bookings/:bookingId/review"
         element={<ClientReview />}
       />
-      <Route
-        path="/client/browse-workers"
-        element={<BrowseWorkers />}
-      />
+      <Route path="/client/browse-workers" element={<BrowseWorkers />} />
+
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

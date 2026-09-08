@@ -20,6 +20,8 @@ function ClientDashboard() {
   const { t } = useLanguage();
 
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const token = localStorage.getItem("helphub_token");
   const user = JSON.parse(localStorage.getItem("helphub_user") || "{}");
 
@@ -31,6 +33,8 @@ function ClientDashboard() {
 
     const fetchBookings = async () => {
       try {
+        setLoading(true);
+        setError("");
         const response = await fetch(`${API_URL}/api/bookings`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -39,12 +43,15 @@ function ClientDashboard() {
 
         const data = await response.json();
 
-        if (data.success) {
-          setBookings(data.bookings || []);
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Unable to load your bookings");
         }
+        setBookings(data.bookings || []);
       } catch (error) {
         console.error("Failed to load bookings:", error);
+        setError(error.message || "Unable to load your bookings");
       } finally {
+        setLoading(false);
       }
     };
 
@@ -233,6 +240,84 @@ function ClientDashboard() {
               {t("nav_my_bookings")}
             </button>
           </div>
+        </section>
+
+        <section className="client-bookings-section">
+          <div className="client-section-header">
+            <div>
+              <h2>Recent bookings</h2>
+              <p>Keep track of your latest service requests.</p>
+            </div>
+            <button type="button" onClick={() => navigate("/client/bookings")}>
+              View all
+            </button>
+          </div>
+
+          {loading && (
+            <div className="client-loading">Loading your bookings...</div>
+          )}
+
+          {!loading && error && (
+            <div className="client-error-state">
+              <strong>Bookings are unavailable</strong>
+              <span>{error}</span>
+              <button type="button" onClick={() => window.location.reload()}>
+                Try again
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && bookings.length === 0 && (
+            <div className="client-empty-state">
+              <CalendarDays size={28} />
+              <h3>No bookings yet</h3>
+              <p>
+                Find a trusted professional and your first booking will appear
+                here.
+              </p>
+              <button type="button" onClick={() => navigate("/client/workers")}>
+                Find a service
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && bookings.length > 0 && (
+            <div className="client-booking-list">
+              {bookings.slice(0, 4).map((booking) => (
+                <article className="client-booking-card" key={booking.id}>
+                  <div className="client-booking-main">
+                    <div className="booking-service-icon">
+                      <Briefcase size={19} />
+                    </div>
+                    <div>
+                      <h3>{booking.service_name || "Service booking"}</h3>
+                      <p>{booking.worker_name || "Worker pending"}</p>
+                      <p>
+                        {new Date(booking.booking_date).toLocaleString(
+                          "en-IN",
+                          { dateStyle: "medium", timeStyle: "short" },
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="client-booking-right">
+                    <strong>
+                      ₹{Number(booking.total_cost || 0).toFixed(2)}
+                    </strong>
+                    <span className={`client-status status-${booking.status}`}>
+                      {booking.status?.replaceAll("_", " ")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/client/bookings/${booking.id}`)}
+                    >
+                      View
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </div>

@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
-    "build": "echo \"No build step needed\""
+    "migrate": "node -e 'import(\"./src/config/initDb.js\").then(m => m.initializeDatabase().then(() => process.exit(0)))'",
+    "build": "node scripts/validate-env.mjs",
+    "load-test": "node scripts/load-test.mjs"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

@@ -20,12 +20,12 @@ const createRateLimiter = ({ windowMs, maxRequests, message }) => {
 
 export const loginRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  maxRequests: 10,
+  maxRequests: process.env.NODE_ENV === "production" ? 100 : 500,
   message: "Too many login attempts. Please try again in 15 minutes.",
 });
 
 export const registrationRateLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
-  maxRequests: 10,
+  maxRequests: process.env.NODE_ENV === "production" ? 100 : 500,
   message: "Too many registration attempts. Please try again later.",
 });

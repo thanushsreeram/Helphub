@@ -2,6 +2,26 @@ html {
   scroll-behavior: smooth;
 }
 
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --accent: #06b6d4;
+  --background: #f5f7fb;
+  --surface: #ffffff;
+  --text: #172033;
+  --muted: #64748b;
+  --subtle: #94a3b8;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --border: #e5eaf1;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --shadow-sm: 0 6px 20px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
 #root,
 body {
   width: 100%;
@@ -11,6 +31,9 @@ body {
 
 body {
   overflow-x: hidden;
+  background: var(--background);
+  color: var(--text);
+  font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
 }
 
 img,
@@ -25,6 +48,7 @@ input,
 select,
 textarea {
   max-width: 100%;
+  font: inherit;
 }
 
 input,
@@ -49,4 +73,13 @@ p,
 label,
 span {
   overflow-wrap: anywhere;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline-offset: 2px;
 }

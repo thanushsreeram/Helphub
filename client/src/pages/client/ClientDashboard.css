@@ -641,3 +641,38 @@
     flex-wrap: wrap;
   }
 }
+
+.client-section-header > button {
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.client-error-state {
+  display: grid;
+  gap: 7px;
+  padding: 24px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 15px;
+  color: #9f1239;
+}
+
+.client-error-state span {
+  font-size: 13px;
+}
+
+.client-error-state button {
+  width: fit-content;
+  margin-top: 6px;
+  padding: 9px 13px;
+  border: 0;
+  border-radius: 8px;
+  background: #be123c;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}

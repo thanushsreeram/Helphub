@@ -175,6 +175,33 @@ function BookingForm() {
       return;
     }
 
+    const selectedDateString = dateTimeValue.slice(0, 10);
+    const selectedMonth = selectedDateString.slice(0, 7);
+
+    if (
+      dayAvailability.schedule_type === "month" &&
+      dayAvailability.valid_month &&
+      dayAvailability.valid_month !== selectedMonth
+    ) {
+      setIsTimeAvailable(false);
+      setAvailabilityMessage(
+        `Worker is only available during ${dayAvailability.valid_month}.`,
+      );
+      return;
+    }
+
+    if (
+      dayAvailability.schedule_type === "custom" &&
+      ((dayAvailability.start_date &&
+        selectedDateString < String(dayAvailability.start_date).slice(0, 10)) ||
+        (dayAvailability.end_date &&
+          selectedDateString > String(dayAvailability.end_date).slice(0, 10)))
+    ) {
+      setIsTimeAvailable(false);
+      setAvailabilityMessage("This date is outside the worker's schedule.");
+      return;
+    }
+
     const startTime = dayAvailability.start_time.slice(0, 5);
     const endTime = dayAvailability.end_time.slice(0, 5);
 
@@ -197,6 +224,16 @@ function BookingForm() {
     try {
       setSubmitting(true);
       setError("");
+
+      if (!serviceId) {
+        throw new Error(
+          "Please select a service before confirming the booking",
+        );
+      }
+
+      if (isTimeAvailable !== true) {
+        throw new Error("Please choose an available date and time");
+      }
 
       const bookingData = {
         worker_id: Number(workerId),
@@ -326,10 +363,10 @@ function BookingForm() {
                 value={serviceId}
                 onChange={(e) => setServiceId(e.target.value)}
               >
-                <option value="">General Work (Custom)</option>
+                <option value="">Select a service</option>
                 {services.map((service) => (
-                  <option key={service.service_id} value={service.service_id}>
-                    {service.service_name}
+                  <option key={service.id} value={service.id}>
+                    {service.name}
                   </option>
                 ))}
               </select>

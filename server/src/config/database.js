@@ -5,20 +5,24 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const isCloudDb =
-  process.env.NODE_ENV === "production" ||
-  process.env.VERCEL ||
-  (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("localhost"));
+const databaseUrl = process.env.DATABASE_URL || "";
+const isLocalDb = /(^|localhost|127\.0\.0\.1|::1)(:|\/|$)/i.test(
+  databaseUrl.replace(/^\w+:\/\//, ""),
+);
+const isCloudDb = Boolean(databaseUrl) && !isLocalDb;
 
 const poolConfig = {
-  connectionString: process.env.DATABASE_URL,
-  max: process.env.VERCEL ? 5 : 20,
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 5000, // Return error if connection is not acquired within 5 seconds
-  statement_timeout: 10000, // Cancel query if it runs longer than 10 seconds
+  connectionString: databaseUrl,
+  max: Number(
+    process.env.DB_POOL_MAX ||
+      (process.env.VERCEL || process.env.NODE_ENV === "production" ? 10 : 20),
+  ),
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 15000, // 15 seconds to accommodate Render free-tier cold starts
+  statement_timeout: 15000,
 };
 
-if (isCloudDb && process.env.DATABASE_URL) {
+if (isCloudDb || process.env.NODE_ENV === "production") {
   poolConfig.ssl = { rejectUnauthorized: false };
 }
 

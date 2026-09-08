@@ -12,10 +12,11 @@ export const authenticateToken = (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
+    const jwtSecret = process.env.JWT_SECRET || "helphub_default_secure_jwt_secret_key_2026";
 
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET
+      jwtSecret
     );
 
     req.user = decoded;
@@ -34,7 +35,8 @@ export const authenticateTokenOptional = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const jwtSecret = process.env.JWT_SECRET || "helphub_default_secure_jwt_secret_key_2026";
+      const decoded = jwt.verify(token, jwtSecret);
       req.user = decoded;
     }
   } catch (error) {

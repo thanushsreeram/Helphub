@@ -20,17 +20,33 @@ function ForgotPassword() {
     }
 
     setMessage(
-      "If an account exists with this email, a reset link will be sent."
+      "Password reset is not configured yet. Please contact HelpHub support.",
     );
   };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: "15px" }}>
-          <div onClick={() => handleLogoClick(navigate)} className="auth-logo" style={{ margin: 0, cursor: "pointer" }} title="Go Back">
-            <img src="/helphub-logo-transparent.png" alt="HelpHub Logo" style={{ height: "48px", objectFit: "contain" }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+            marginBottom: "15px",
+          }}
+        >
+          <div
+            onClick={() => handleLogoClick(navigate)}
+            className="auth-logo"
+            style={{ margin: 0, cursor: "pointer" }}
+            title="Go Back"
+          >
+            <img
+              src="/helphub-logo-transparent.png"
+              alt="HelpHub Logo"
+              style={{ height: "48px", objectFit: "contain" }}
+            />
           </div>
           <LanguageSelector />
         </div>
@@ -48,13 +64,10 @@ function ForgotPassword() {
             password?
           </h1>
 
-          <p>
-            Enter your email and we'll help you get back into your account.
-          </p>
+          <p>Enter your email and we'll help you get back into your account.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-
           <div className="form-group">
             <label>Email address</label>
 
@@ -73,25 +86,18 @@ function ForgotPassword() {
             </div>
           </div>
 
-          {message && (
-            <div className="form-error">
-              {message}
-            </div>
-          )}
+          {message && <div className="form-error">{message}</div>}
 
           <button type="submit" className="auth-submit">
             Send Reset Link
           </button>
-
         </form>
 
         <div className="auth-footer">
           <Link to="/login">
-            <ArrowLeft size={14} />
-            {" "}Back to Login
+            <ArrowLeft size={14} /> Back to Login
           </Link>
         </div>
-
       </div>
     </div>
   );

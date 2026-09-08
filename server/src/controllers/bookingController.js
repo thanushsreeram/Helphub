@@ -500,6 +500,7 @@ export const acceptBooking = async (req, res) => {
     }
 
     if (booking.status !== "pending") {
+      await client.query("ROLLBACK");
       return res.status(400).json({
         success: false,
         message: `Booking cannot be accepted because its status is ${booking.status}`,
