@@ -33,13 +33,16 @@ import ClientReview from "../pages/client/ClientReview";
 // 404
 import NotFound from "../pages/NotFound";
 
+import ProfileGuard from "./ProfileGuard";
+
 function AppRoutes() {
   return (
     <Routes>
       {/* =========================
-          HOME
+          HOME & COMMON
       ========================= */}
       <Route path="/" element={<Home />} />
+      <Route path="/profile" element={<ProfileGuard />} />
 
       {/* =========================
           AUTHENTICATION

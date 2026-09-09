@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-function ProtectedRoute({ allowedRole }) {
+function ProtectedRoute({ allowedRole, allowedRoles }) {
   const location = useLocation();
 
   const token = localStorage.getItem("helphub_token");
@@ -18,12 +18,24 @@ function ProtectedRoute({ allowedRole }) {
   } catch {
     localStorage.removeItem("helphub_token");
     localStorage.removeItem("helphub_user");
+    localStorage.removeItem("helphub_roles");
+    localStorage.removeItem("helphub_has_both_accounts");
 
     return <Navigate to="/login" replace />;
   }
 
-  // Wrong role
-  if (allowedRole && user.role !== allowedRole) {
+  if (!user || !user.role) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const rolesToCheck = allowedRoles
+    ? allowedRoles
+    : allowedRole
+      ? [allowedRole]
+      : null;
+
+  // Wrong role protection
+  if (rolesToCheck && !rolesToCheck.includes(user.role)) {
     if (user.role === "worker") {
       return <Navigate to="/worker/dashboard" replace />;
     }

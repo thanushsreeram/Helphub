@@ -73,6 +73,13 @@ export const createWorkerProfile = async (req, res) => {
 
 export const getMyWorkerProfile = async (req, res) => {
   try {
+    if (req.user?.role !== "worker") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Access is restricted to worker accounts only",
+      });
+    }
+
     const userId = req.user.userId;
 
     const result = await pool.query(

@@ -86,8 +86,24 @@ function WorkerProfile() {
   };
 
   useEffect(() => {
-    fetchProfile();
-  }, [token, navigate]);
+    if (!token || !storedUser || !storedUser.role) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    if (storedUser.role === "client") {
+      navigate("/client/profile", { replace: true });
+      return;
+    }
+
+    if (storedUser.role === "worker") {
+      fetchProfile();
+    }
+  }, [token, navigate, storedUser?.role]);
+
+  if (!token || !storedUser || storedUser.role !== "worker") {
+    return null;
+  }
 
   const formatRating = (rating) => {
     const value = Number(rating || 0);

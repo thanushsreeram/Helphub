@@ -63,6 +63,7 @@ function ClientDashboard() {
     localStorage.removeItem("helphub_user");
     localStorage.removeItem("helphub_roles");
     localStorage.removeItem("helphub_has_both_accounts");
+    localStorage.removeItem("helphub_registered_email");
     navigate("/login");
   };
 

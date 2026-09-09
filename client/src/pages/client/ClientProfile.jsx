@@ -27,53 +27,65 @@ function ClientProfile() {
   const [error, setError] = useState("");
 
   const token = localStorage.getItem("helphub_token");
+  const storedUser = JSON.parse(localStorage.getItem("helphub_user") || "{}");
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        setError("");
+      const response = await fetch(`${API_URL}/api/users/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        const response = await fetch(`${API_URL}/api/users/profile`, {
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to load profile");
+      }
+
+      setUser(data.user);
+
+      if (data.user && data.user.id) {
+        const revRes = await fetch(`${API_URL}/api/reviews/client/${data.user.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.message || "Failed to load profile");
+        const revData = await revRes.json();
+        if (revRes.ok && revData.success) {
+          setClientReviews(revData.reviews || []);
         }
-
-        setUser(data.user);
-
-        if (data.user && data.user.id) {
-          const revRes = await fetch(`${API_URL}/api/reviews/client/${data.user.id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const revData = await revRes.json();
-          if (revRes.ok && revData.success) {
-            setClientReviews(revData.reviews || []);
-          }
-        }
-      } catch (err) {
-        console.error("Fetch profile error:", err);
-        setError(err.message || "Unable to load user profile");
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Fetch profile error:", err);
+      setError(err.message || "Unable to load user profile");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchProfile();
-  }, [token, navigate]);
+  useEffect(() => {
+    if (!token || !storedUser || !storedUser.role) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    if (storedUser.role === "worker") {
+      navigate("/worker/profile", { replace: true });
+      return;
+    }
+
+    if (storedUser.role === "client") {
+      fetchProfile();
+    }
+  }, [token, navigate, storedUser?.role]);
+
+  if (!token || !storedUser || storedUser.role !== "client") {
+    return null;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
