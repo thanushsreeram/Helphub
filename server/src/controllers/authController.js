@@ -188,15 +188,32 @@ export const login = async (req, res) => {
 
     let user = null;
 
-    for (const account of result.rows) {
-      const passwordMatch = await bcrypt.compare(
-        password,
-        account.password_hash,
-      );
+    if (req.body.role && ["client", "worker"].includes(req.body.role)) {
+      for (const account of result.rows) {
+        if (account.role === req.body.role) {
+          const passwordMatch = await bcrypt.compare(
+            password,
+            account.password_hash,
+          );
+          if (passwordMatch) {
+            user = account;
+            break;
+          }
+        }
+      }
+    }
 
-      if (passwordMatch) {
-        user = account;
-        break;
+    if (!user) {
+      for (const account of result.rows) {
+        const passwordMatch = await bcrypt.compare(
+          password,
+          account.password_hash,
+        );
+
+        if (passwordMatch) {
+          user = account;
+          break;
+        }
       }
     }
 
