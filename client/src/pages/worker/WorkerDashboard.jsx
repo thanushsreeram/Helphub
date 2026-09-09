@@ -202,6 +202,10 @@ function WorkerDashboard() {
     (booking) => booking.status === "pending",
   );
 
+  const hasBothAccounts = JSON.parse(
+    localStorage.getItem("helphub_has_both_accounts") || "false",
+  );
+
   const handleSwitchToClient = async () => {
     try {
       setLoading(true);
@@ -218,6 +222,14 @@ function WorkerDashboard() {
       if (data.success) {
         localStorage.setItem("helphub_token", data.token);
         localStorage.setItem("helphub_user", JSON.stringify(data.user));
+        localStorage.setItem(
+          "helphub_roles",
+          JSON.stringify(data.roles || []),
+        );
+        localStorage.setItem(
+          "helphub_has_both_accounts",
+          JSON.stringify(data.hasBothAccounts || false),
+        );
         navigate("/client/dashboard");
       }
     } catch (err) {
@@ -258,19 +270,21 @@ function WorkerDashboard() {
         </div>
 
         <div className="dashboard-actions">
-          <button
-            onClick={handleSwitchToClient}
-            className="dashboard-action-button"
-            style={{
-              background: "#eef2ff",
-              color: "#4f46e5",
-              borderColor: "#c7d2fe",
-            }}
-            title="Switch to Client Portal"
-          >
-            <User size={17} />
-            Client Portal
-          </button>
+          {hasBothAccounts && (
+            <button
+              onClick={handleSwitchToClient}
+              className="dashboard-action-button"
+              style={{
+                background: "#eef2ff",
+                color: "#4f46e5",
+                borderColor: "#c7d2fe",
+              }}
+              title="Switch to Client Portal"
+            >
+              <User size={17} />
+              Client Portal
+            </button>
+          )}
 
           <button
             onClick={() => navigate("/worker/profile")}

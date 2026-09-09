@@ -61,8 +61,14 @@ function ClientDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("helphub_token");
     localStorage.removeItem("helphub_user");
+    localStorage.removeItem("helphub_roles");
+    localStorage.removeItem("helphub_has_both_accounts");
     navigate("/login");
   };
+
+  const hasBothAccounts = JSON.parse(
+    localStorage.getItem("helphub_has_both_accounts") || "false",
+  );
 
   const handleSwitchToWorker = async () => {
     try {
@@ -79,6 +85,14 @@ function ClientDashboard() {
       if (data.success) {
         localStorage.setItem("helphub_token", data.token);
         localStorage.setItem("helphub_user", JSON.stringify(data.user));
+        localStorage.setItem(
+          "helphub_roles",
+          JSON.stringify(data.roles || []),
+        );
+        localStorage.setItem(
+          "helphub_has_both_accounts",
+          JSON.stringify(data.hasBothAccounts || false),
+        );
         navigate("/worker/dashboard");
       }
     } catch (err) {
@@ -117,19 +131,21 @@ function ClientDashboard() {
           className="client-header-actions"
           style={{ display: "flex", alignItems: "center", gap: "10px" }}
         >
-          <button
-            className="profile-button"
-            onClick={handleSwitchToWorker}
-            style={{
-              background: "#eef2ff",
-              color: "#4f46e5",
-              borderColor: "#c7d2fe",
-            }}
-            title="Switch to Worker Portal"
-          >
-            <Briefcase size={17} />
-            Worker Portal
-          </button>
+          {hasBothAccounts && (
+            <button
+              className="profile-button"
+              onClick={handleSwitchToWorker}
+              style={{
+                background: "#eef2ff",
+                color: "#4f46e5",
+                borderColor: "#c7d2fe",
+              }}
+              title="Switch to Worker Portal"
+            >
+              <Briefcase size={17} />
+              Worker Portal
+            </button>
+          )}
 
           <button
             className="profile-button"

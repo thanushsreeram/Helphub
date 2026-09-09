@@ -168,11 +168,15 @@ export const login = async (req, res) => {
       });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     const result = await pool.query(
-      `SELECT id, name, email, password_hash, role, phone, is_email_verified, email_verification_token
+      `SELECT id, name, email, password_hash, role, phone,
+              is_email_verified, email_verification_token
        FROM users
-       WHERE email = $1`,
-      [email.toLowerCase().trim()],
+       WHERE email = $1
+       ORDER BY id ASC`,
+      [normalizedEmail],
     );
 
     if (result.rows.length === 0) {
@@ -182,18 +186,31 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = result.rows[0];
+    let user = null;
 
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    for (const account of result.rows) {
+      const passwordMatch = await bcrypt.compare(
+        password,
+        account.password_hash,
+      );
 
-    if (!passwordMatch) {
+      if (passwordMatch) {
+        user = account;
+        break;
+      }
+    }
+
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    const autoVerify = process.env.AUTO_VERIFY_EMAIL === "true" || process.env.REQUIRE_EMAIL_VERIFICATION === "false";
+    const autoVerify =
+      process.env.AUTO_VERIFY_EMAIL === "true" ||
+      process.env.REQUIRE_EMAIL_VERIFICATION === "false";
+
     if (user.is_email_verified === false && !autoVerify) {
       return res.status(403).json({
         success: false,
@@ -203,7 +220,14 @@ export const login = async (req, res) => {
       });
     }
 
-    const jwtSecret = process.env.JWT_SECRET || "helphub_default_secure_jwt_secret_key_2026";
+    const roles = [...new Set(result.rows.map((account) => account.role))];
+    const hasClientAccount = roles.includes("client");
+    const hasWorkerAccount = roles.includes("worker");
+    const hasBothAccounts = hasClientAccount && hasWorkerAccount;
+
+    const jwtSecret =
+      process.env.JWT_SECRET || "helphub_default_secure_jwt_secret_key_2026";
+
     const token = jwt.sign(
       {
         userId: user.id,
@@ -217,16 +241,20 @@ export const login = async (req, res) => {
 
     delete user.password_hash;
 
-    res.json({
+    return res.json({
       success: true,
       message: "Login successful",
       token,
       user,
+      roles,
+      hasClientAccount,
+      hasWorkerAccount,
+      hasBothAccounts,
     });
   } catch (error) {
-    console.error("Login error detail:", error.message || error);
+    console.error("Login error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message || "Server error during login",
     });
@@ -280,23 +308,39 @@ export const switchRole = async (req, res) => {
       }
     }
 
+    const jwtSecret =
+      process.env.JWT_SECRET || "helphub_default_secure_jwt_secret_key_2026";
+
     // Issue updated JWT token
     const token = jwt.sign(
       {
         userId: user.id,
         role: user.role,
       },
-      process.env.JWT_SECRET,
+      jwtSecret,
       {
         expiresIn: "7d",
       },
     );
+
+    const rolesResult = await pool.query(
+      `SELECT role FROM users WHERE email = $1`,
+      [user.email.toLowerCase().trim()],
+    );
+    const roles = [...new Set(rolesResult.rows.map((a) => a.role))];
+    const hasClientAccount = roles.includes("client");
+    const hasWorkerAccount = roles.includes("worker");
+    const hasBothAccounts = hasClientAccount && hasWorkerAccount;
 
     res.json({
       success: true,
       message: `Successfully switched to ${target_role} role`,
       token,
       user,
+      roles,
+      hasClientAccount,
+      hasWorkerAccount,
+      hasBothAccounts,
     });
   } catch (error) {
     console.error("Switch role error:", error);

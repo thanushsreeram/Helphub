@@ -44,6 +44,14 @@ function VerifyEmail() {
         // Save token and user details to log user in automatically
         localStorage.setItem("helphub_token", data.token);
         localStorage.setItem("helphub_user", JSON.stringify(data.user));
+        localStorage.setItem(
+          "helphub_roles",
+          JSON.stringify(data.roles || []),
+        );
+        localStorage.setItem(
+          "helphub_has_both_accounts",
+          JSON.stringify(data.hasBothAccounts || false),
+        );
         setUser(data.user);
         setSuccess(true);
       } catch (err) {
