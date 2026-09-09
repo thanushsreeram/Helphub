@@ -228,13 +228,18 @@
 
 .quick-actions {
   margin-top: 22px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .quick-action-card {
-  background: #172033;
+  background: linear-gradient(135deg, #0f172a 0%, #172033 100%);
   color: #ffffff;
 
-  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 20px;
 
   padding: 24px 27px;
 
@@ -242,31 +247,34 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
 }
 
 .quick-action-card h3 {
   margin: 0;
 
   font-size: 18px;
+  font-weight: 800;
 }
 
 .quick-action-card p {
   margin: 5px 0 0;
 
-  color: #b8c0ce;
+  color: #c4cfde;
 
   font-size: 13px;
 }
 
 .quick-action-card button {
-  border: none;
+  border: 1px solid rgba(148, 163, 184, 0.4);
 
   background: #ffffff;
   color: #172033;
 
   padding: 11px 17px;
 
-  border-radius: 9px;
+  border-radius: 10px;
 
   display: flex;
   align-items: center;
@@ -279,11 +287,12 @@
 
   white-space: nowrap;
 
-  transition: 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .quick-action-card button:hover {
   transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(255, 255, 255, 0.14);
 }
 
 /* BOOKINGS */
