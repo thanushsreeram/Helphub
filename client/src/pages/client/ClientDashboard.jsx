@@ -257,6 +257,20 @@ function ClientDashboard() {
               {t("nav_my_bookings")}
             </button>
           </div>
+
+          <div className="quick-action-card" style={{ borderColor: "#bfdbfe" }}>
+            <div>
+              <h3>My Appointments</h3>
+              <p>View appointment requests and meeting status with workers.</p>
+            </div>
+
+            <button
+              onClick={() => navigate("/client/appointments")}
+              style={{ background: "#2563eb", color: "#fff" }}
+            >
+              View Appointments
+            </button>
+          </div>
         </section>
 
         <section className="client-bookings-section">

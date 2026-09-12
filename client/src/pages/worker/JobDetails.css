@@ -283,6 +283,45 @@
   font-weight: 650;
 }
 
+.detail-row-location {
+  align-items: flex-start;
+}
+
+.detail-content-location {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+}
+
+.job-navigate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.2);
+}
+
+.job-navigate-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(37, 99, 235, 0.3);
+}
+
+.job-navigate-btn:active {
+  transform: translateY(0);
+}
+
 /* =========================================
    PAYMENT
    ========================================= */
@@ -1053,4 +1092,393 @@
 
 .worker-modal-btn-confirm:hover {
   opacity: 0.9;
+}
+
+/* =========================================
+   REQUEST ADDITIONAL MONEY STYLES
+   ========================================= */
+
+.request-add-money-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0 !important;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.request-add-money-button:hover:not(:disabled) {
+  background: #dcfce7;
+  border-color: #86efac !important;
+  transform: translateY(-1px);
+}
+
+.add-money-trigger-btn {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-money-trigger-btn:hover {
+  background: #dbeafe;
+}
+
+.additional-money-history-card {
+  margin-top: 24px;
+}
+
+.loading-requests-text {
+  color: #64748b;
+  font-size: 14px;
+  padding: 12px 0;
+}
+
+.empty-requests-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+  gap: 8px;
+}
+
+.empty-requests-state p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.empty-requests-state small {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.requests-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.request-history-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.request-history-card.status-paid {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.request-history-card.status-rejected {
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
+.request-history-card.status-pending {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.request-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.request-amount-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.request-amount-badge span {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.request-amount-badge strong {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.request-status-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pill-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.pill-payment_pending {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.pill-paid {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.pill-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.pill-cancelled {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.request-card-reason {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.request-card-reason small {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.request-card-reason p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #1e293b;
+  line-height: 1.45;
+}
+
+.request-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding-top: 8px;
+}
+
+.request-paid-date {
+  color: #166534;
+  font-weight: 600;
+}
+
+/* Modal */
+.add-money-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.add-money-modal-content {
+  background: #ffffff;
+  border-radius: 20px;
+  width: min(520px, 95%);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.add-money-modal-header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.add-money-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.close-add-money-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.close-add-money-btn:hover {
+  color: #1e293b;
+  background: #f1f5f9;
+}
+
+.add-money-modal-body {
+  padding: 24px;
+}
+
+.add-money-notice {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.5;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.current-amount-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+.current-amount-banner strong {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.add-money-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.add-money-modal-body .form-group label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.add-money-modal-body input,
+.add-money-modal-body textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.add-money-modal-body input:focus,
+.add-money-modal-body textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.add-money-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+}
+
+.cancel-add-money-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submit-add-money-btn {
+  background: #2563eb;
+  border: none;
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit-add-money-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.submit-add-money-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }

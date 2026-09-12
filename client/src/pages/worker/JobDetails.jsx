@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   RefreshCw,
   Star,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_URL } from "../../services/api";
@@ -20,6 +21,7 @@ import HelpHubModal from "../../components/common/HelpHubModal";
 import WorkerReviewModal from "../../components/reviews/WorkerReviewModal";
 import LanguageSelector from "../../components/common/LanguageSelector";
 import { handleLogoClick } from "../../utils/navigation";
+import { openGoogleMaps } from "../../utils/maps";
 import "./JobDetails.css";
 
 function JobDetails() {
@@ -30,6 +32,16 @@ function JobDetails() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // ADDITIONAL MONEY REQUEST STATE
+  const [additionalMoneyRequests, setAdditionalMoneyRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [isAddMoneyModalOpen, setIsAddMoneyModalOpen] = useState(false);
+  const [addMoneyAmount, setAddMoneyAmount] = useState("");
+  const [addMoneyReason, setAddMoneyReason] = useState("");
+  const [addMoneySubmitting, setAddMoneySubmitting] = useState(false);
+  const [addMoneyError, setAddMoneyError] = useState("");
 
   // MODAL STATE
   const [modalConfig, setModalConfig] = useState({
@@ -46,6 +58,25 @@ function JobDetails() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const token = localStorage.getItem("helphub_token");
+
+  const fetchAdditionalMoneyRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      const res = await fetch(`${API_URL}/api/additional-money/booking/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setAdditionalMoneyRequests(data.requests || []);
+        }
+      }
+    } catch (err) {
+      console.error("Fetch additional money requests error:", err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
 
   const fetchBooking = async () => {
     try {
@@ -79,7 +110,61 @@ function JobDetails() {
     }
 
     fetchBooking();
+    fetchAdditionalMoneyRequests();
   }, [id]);
+
+  const handleOpenAddMoneyModal = () => {
+    setAddMoneyAmount("");
+    setAddMoneyReason("");
+    setAddMoneyError("");
+    setIsAddMoneyModalOpen(true);
+  };
+
+  const handleSubmitAddMoneyRequest = async (e) => {
+    e.preventDefault();
+    setAddMoneyError("");
+
+    const numAmount = Number(addMoneyAmount);
+    if (!Number.isFinite(numAmount) || numAmount <= 0) {
+      setAddMoneyError("Please enter a valid positive additional amount (₹)");
+      return;
+    }
+
+    if (!addMoneyReason.trim()) {
+      setAddMoneyError("Please provide a reason for the additional money request");
+      return;
+    }
+
+    try {
+      setAddMoneySubmitting(true);
+      const res = await fetch(`${API_URL}/api/additional-money/request/${id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requested_amount: numAmount,
+          reason: addMoneyReason.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to submit request");
+      }
+
+      setIsAddMoneyModalOpen(false);
+      setSuccessMessage(`Additional money request for ₹${numAmount.toLocaleString("en-IN")} submitted! Waiting for client review.`);
+      await fetchAdditionalMoneyRequests();
+      await fetchBooking();
+    } catch (err) {
+      console.error("Submit add money request error:", err);
+      setAddMoneyError(err.message || "Failed to submit request");
+    } finally {
+      setAddMoneySubmitting(false);
+    }
+  };
 
   const openActionModal = (
     action,
@@ -285,6 +370,26 @@ function JobDetails() {
           </div>
         )}
 
+        {/* SUCCESS */}
+        {successMessage && (
+          <div className="action-success" style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            background: "#ecfdf5",
+            color: "#047857",
+            border: "1px solid #a7f3d0",
+            borderRadius: "10px",
+            padding: "13px 16px",
+            marginBottom: "20px",
+            fontSize: "14px",
+            fontWeight: "600",
+          }}>
+            <CheckCircle size={18} />
+            <span>{successMessage}</span>
+          </div>
+        )}
+
         {/* MAIN GRID */}
         <div className="job-details-grid">
           {/* JOB INFORMATION */}
@@ -309,15 +414,26 @@ function JobDetails() {
               </div>
 
               {/* LOCATION */}
-              <div className="detail-row">
+              <div className="detail-row detail-row-location">
                 <div className="detail-icon">
                   <MapPin size={19} />
                 </div>
 
-                <div>
-                  <small>Location</small>
-
+                <div className="detail-content-location">
+                  <small>Job Location (Client Address)</small>
                   <strong>{booking.location || "Not provided"}</strong>
+                  {booking.location && (
+                    <button
+                      type="button"
+                      className="job-navigate-btn"
+                      onClick={(e) => openGoogleMaps(booking.location, e)}
+                      title="Open in Google Maps for navigation"
+                    >
+                      <MapPin size={15} />
+                      <span>View on Google Maps</span>
+                      <ExternalLink size={13} />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -504,6 +620,16 @@ function JobDetails() {
                 </button>
 
                 <button
+                  type="button"
+                  className="request-add-money-button"
+                  onClick={handleOpenAddMoneyModal}
+                  disabled={actionLoading}
+                >
+                  <IndianRupee size={18} />
+                  Request Additional Money
+                </button>
+
+                <button
                   className="emergency-button"
                   disabled={actionLoading}
                   onClick={() =>
@@ -541,6 +667,16 @@ function JobDetails() {
                 >
                   <CheckCircle size={19} />
                   {actionLoading ? "Completing..." : "Complete Job"}
+                </button>
+
+                <button
+                  type="button"
+                  className="request-add-money-button"
+                  onClick={handleOpenAddMoneyModal}
+                  disabled={actionLoading}
+                >
+                  <IndianRupee size={18} />
+                  Request Additional Money
                 </button>
 
                 <button
@@ -625,6 +761,80 @@ function JobDetails() {
           </div>
         </section>
 
+        {/* ADDITIONAL MONEY REQUESTS HISTORY */}
+        <section className="details-card additional-money-history-card">
+          <div className="card-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <IndianRupee size={20} color="#2563eb" />
+              <h3>Additional Money Requests</h3>
+            </div>
+            {["committed", "in_progress"].includes(booking.status) && (
+              <button
+                type="button"
+                className="add-money-trigger-btn"
+                onClick={handleOpenAddMoneyModal}
+              >
+                + Request Additional Money
+              </button>
+            )}
+          </div>
+
+          {loadingRequests ? (
+            <p className="loading-requests-text">Loading request history...</p>
+          ) : additionalMoneyRequests.length === 0 ? (
+            <div className="empty-requests-state">
+              <IndianRupee size={32} color="#94a3b8" />
+              <p>No additional money requests made for this job.</p>
+              {["committed", "in_progress"].includes(booking.status) && (
+                <small>If extra work or materials are required, you can send a formal request to the client.</small>
+              )}
+            </div>
+          ) : (
+            <div className="requests-history-list">
+              {additionalMoneyRequests.map((req, idx) => (
+                <div className={`request-history-card status-${req.status}`} key={req.id}>
+                  <div className="request-card-header">
+                    <div className="request-amount-badge">
+                      <span>Request #{idx + 1}:</span>
+                      <strong>+ ₹{Number(req.requested_amount).toLocaleString("en-IN")}</strong>
+                    </div>
+
+                    <span className={`request-status-pill pill-${req.status}`}>
+                      {req.status === "pending" && "Waiting for Client"}
+                      {req.status === "payment_pending" && "Payment Pending"}
+                      {req.status === "paid" && "Paid & Approved"}
+                      {req.status === "rejected" && "Rejected"}
+                      {req.status === "cancelled" && "Cancelled"}
+                    </span>
+                  </div>
+
+                  <div className="request-card-reason">
+                    <small>Reason:</small>
+                    <p>{req.reason}</p>
+                  </div>
+
+                  <div className="request-card-footer">
+                    <span className="request-date">
+                      Requested on {new Date(req.created_at).toLocaleString("en-IN", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </span>
+                    {req.status === "paid" && req.paid_at && (
+                      <span className="request-paid-date">
+                        Paid on {new Date(req.paid_at).toLocaleString("en-IN", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         {/* WORKFLOW */}
         <section className="details-card workflow-card">
           <div className="card-title">
@@ -697,6 +907,108 @@ function JobDetails() {
           </div>
         </section>
       </main>
+
+      {/* REQUEST ADDITIONAL MONEY MODAL */}
+      {isAddMoneyModalOpen && (
+        <div
+          className="add-money-modal-backdrop"
+          onClick={() => !addMoneySubmitting && setIsAddMoneyModalOpen(false)}
+        >
+          <div
+            className="add-money-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="add-money-modal-header">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <IndianRupee size={22} color="#2563eb" />
+                <h3>Request Additional Money</h3>
+              </div>
+              <button
+                type="button"
+                className="close-add-money-btn"
+                onClick={() => !addMoneySubmitting && setIsAddMoneyModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitAddMoneyRequest}>
+              <div className="add-money-modal-body">
+                <p className="add-money-notice">
+                  You are requesting extra funds for project #{booking.id}. 
+                  The client must review and approve this request. Money will only be added after the client pays.
+                </p>
+
+                {addMoneyError && (
+                  <div className="add-money-error-banner">
+                    <AlertTriangle size={16} />
+                    <span>{addMoneyError}</span>
+                  </div>
+                )}
+
+                <div className="current-amount-banner">
+                  <span>Current Project Amount:</span>
+                  <strong>₹{Number(booking.total_cost || 0).toLocaleString("en-IN")}</strong>
+                </div>
+
+                <div className="form-group" style={{ marginTop: "16px" }}>
+                  <label htmlFor="additional-amount-input">
+                    Additional Amount (₹) <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <input
+                    id="additional-amount-input"
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="e.g. 3000"
+                    value={addMoneyAmount}
+                    onChange={(e) => setAddMoneyAmount(e.target.value)}
+                    required
+                    disabled={addMoneySubmitting}
+                  />
+                  <small style={{ color: "#64748b", marginTop: "4px", display: "block" }}>
+                    Must be greater than ₹0.
+                  </small>
+                </div>
+
+                <div className="form-group" style={{ marginTop: "16px" }}>
+                  <label htmlFor="additional-reason-input">
+                    Reason for Additional Amount <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <textarea
+                    id="additional-reason-input"
+                    rows="3"
+                    placeholder="e.g. Additional electrical work was requested by the client / Extra materials needed for wall finishing."
+                    value={addMoneyReason}
+                    onChange={(e) => setAddMoneyReason(e.target.value)}
+                    required
+                    disabled={addMoneySubmitting}
+                  />
+                </div>
+              </div>
+
+              <div className="add-money-modal-footer">
+                <button
+                  type="button"
+                  className="cancel-add-money-btn"
+                  onClick={() => setIsAddMoneyModalOpen(false)}
+                  disabled={addMoneySubmitting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="submit-add-money-btn"
+                  disabled={addMoneySubmitting}
+                >
+                  {addMoneySubmitting ? "Submitting..." : "Send Request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <WorkerReviewModal
         isOpen={isReviewModalOpen}

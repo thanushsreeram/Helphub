@@ -9,6 +9,12 @@ import {
   CheckCircle,
   CreditCard,
   XCircle,
+  IndianRupee,
+  AlertTriangle,
+  Banknote,
+  ShieldCheck,
+  Check,
+  X,
 } from "lucide-react";
 import { API_URL } from "../../services/api";
 
@@ -23,47 +29,280 @@ function ClientBookingDetails() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
   const [cancellationDetails, setCancellationDetails] = useState("");
 
+  // ADDITIONAL MONEY STATE
+  const [additionalMoneyRequests, setAdditionalMoneyRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [actionReqId, setActionReqId] = useState(null);
+
+  // ACCEPT & PAY MODAL STATE
+  const [payModal, setPayModal] = useState({
+    isOpen: false,
+    request: null,
+    method: "online", // 'online' | 'cash'
+    processing: false,
+    error: "",
+  });
+
   const token = localStorage.getItem("helphub_token");
 
   useEffect(() => {
-    const fetchBooking = async () => {
-      if (!token) {
-        navigate("/login");
-        return;
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const fetchAdditionalMoneyRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      const res = await fetch(`${API_URL}/api/additional-money/booking/${bookingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setAdditionalMoneyRequests(data.requests || []);
+        }
+      }
+    } catch (err) {
+      console.error("Fetch additional money requests error:", err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  const fetchBooking = async () => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch(`${API_URL}/api/bookings/${bookingId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to load booking");
       }
 
-      try {
-        setLoading(true);
-        setError("");
+      setBooking(data.booking);
+    } catch (error) {
+      console.error("Booking details error:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const response = await fetch(`${API_URL}/api/bookings/${bookingId}`, {
+  useEffect(() => {
+    fetchBooking();
+    fetchAdditionalMoneyRequests();
+  }, [bookingId, token, navigate]);
+
+  // REJECT ADDITIONAL MONEY REQUEST
+  const handleRejectAddMoney = async (requestId) => {
+    if (!window.confirm("Are you sure you want to reject this additional money request? The project amount will not change.")) {
+      return;
+    }
+
+    try {
+      setActionReqId(requestId);
+      setError("");
+      setSuccessMsg("");
+
+      const res = await fetch(`${API_URL}/api/additional-money/request/${requestId}/reject`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to reject request");
+      }
+
+      setSuccessMsg("Additional money request was rejected. The project amount remains unchanged.");
+      await fetchAdditionalMoneyRequests();
+      await fetchBooking();
+    } catch (err) {
+      console.error("Reject additional money error:", err);
+      setError(err.message || "Failed to reject request");
+    } finally {
+      setActionReqId(null);
+    }
+  };
+
+  // OPEN ACCEPT & PAY MODAL
+  const openAcceptAndPayModal = (req) => {
+    setPayModal({
+      isOpen: true,
+      request: req,
+      method: "online",
+      processing: false,
+      error: "",
+    });
+  };
+
+  // EXECUTE PAYMENT FOR ADDITIONAL MONEY REQUEST
+  const handleExecuteAddMoneyPayment = async () => {
+    const reqItem = payModal.request;
+    if (!reqItem) return;
+
+    try {
+      setPayModal((prev) => ({ ...prev, processing: true, error: "" }));
+
+      // 1. CASH PAYMENT FLOW
+      if (payModal.method === "cash") {
+        const res = await fetch(`${API_URL}/api/additional-money/request/${reqItem.id}/pay/cash`, {
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
 
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.message || "Failed to load booking");
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Cash payment recording failed");
         }
 
-        setBooking(data.booking);
-      } catch (error) {
-        console.error("Booking details error:", error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
+        setSuccessMsg(`Cash payment of ₹${Number(reqItem.requested_amount).toLocaleString("en-IN")} recorded! Project total has been updated.`);
+        setPayModal({
+          isOpen: false,
+          request: null,
+          method: "online",
+          processing: false,
+          error: "",
+        });
+        await fetchAdditionalMoneyRequests();
+        await fetchBooking();
+        return;
       }
-    };
 
-    fetchBooking();
-  }, [bookingId, token, navigate]);
+      // 2. ONLINE PAYMENT VIA RAZORPAY
+      const orderRes = await fetch(`${API_URL}/api/additional-money/request/${reqItem.id}/pay/order`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const orderData = await orderRes.json();
+      if (!orderRes.ok || !orderData.success) {
+        throw new Error(orderData.message || "Failed to create payment order");
+      }
+
+      if (!window.Razorpay) {
+        throw new Error("Razorpay Checkout failed to load. Please refresh the page.");
+      }
+
+      const clientUser = JSON.parse(localStorage.getItem("helphub_user") || "{}");
+
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        name: "HelpHub",
+        description: `Additional Project Work: ₹${reqItem.requested_amount}`,
+        order_id: orderData.order.id,
+
+        handler: async function (response) {
+          try {
+            const verifyRes = await fetch(`${API_URL}/api/additional-money/request/${reqItem.id}/pay/verify`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok || !verifyData.success) {
+              throw new Error(verifyData.message || "Payment verification failed");
+            }
+
+            setSuccessMsg(`Additional amount of ₹${Number(reqItem.requested_amount).toLocaleString("en-IN")} paid successfully! 🎉 Project total is updated.`);
+            setPayModal({
+              isOpen: false,
+              request: null,
+              method: "online",
+              processing: false,
+              error: "",
+            });
+            await fetchAdditionalMoneyRequests();
+            await fetchBooking();
+          } catch (vErr) {
+            console.error("Payment verify error:", vErr);
+            setPayModal((prev) => ({
+              ...prev,
+              processing: false,
+              error: vErr.message || "Verification failed",
+            }));
+          }
+        },
+
+        prefill: {
+          name: clientUser.name || "",
+          email: clientUser.email || "",
+        },
+
+        theme: {
+          color: "#2563eb",
+        },
+
+        modal: {
+          ondismiss: function () {
+            setPayModal((prev) => ({ ...prev, processing: false }));
+          },
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.on("payment.failed", function (response) {
+        console.error("Payment failed:", response.error);
+        setPayModal((prev) => ({
+          ...prev,
+          processing: false,
+          error: response.error?.description || "Payment failed",
+        }));
+      });
+
+      razorpayInstance.open();
+    } catch (err) {
+      console.error("Payment order error:", err);
+      setPayModal((prev) => ({
+        ...prev,
+        processing: false,
+        error: err.message || "Payment initialization failed",
+      }));
+    }
+  };
 
   const handleCancel = () => {
     setError("");
@@ -246,6 +485,14 @@ function ClientBookingDetails() {
           </div>
         )}
 
+        {/* Success Alert */}
+        {successMsg && (
+          <div className="booking-details-alert" style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" }}>
+            <CheckCircle size={19} color="#16a34a" />
+            {successMsg}
+          </div>
+        )}
+
         <div className="booking-details-grid">
           {/* Main Information */}
           <section className="booking-main-card">
@@ -341,6 +588,101 @@ function ClientBookingDetails() {
                   "No description provided for this booking."}
               </div>
             </div>
+
+            {/* ADDITIONAL MONEY REQUESTS FOR CLIENT */}
+            <div className="details-section client-add-money-section">
+              <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <IndianRupee size={21} color="#2563eb" />
+                  <h3>Additional Money Requests</h3>
+                </div>
+                {additionalMoneyRequests.length > 0 && (
+                  <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "600" }}>
+                    {additionalMoneyRequests.length} request{additionalMoneyRequests.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+
+              {loadingRequests ? (
+                <p style={{ color: "#64748b", fontSize: "14px" }}>Loading requests...</p>
+              ) : additionalMoneyRequests.length === 0 ? (
+                <div className="client-empty-add-money">
+                  <p>No additional money requests for this project.</p>
+                  <small>If extra work or unexpected materials arise, the worker will submit a request here for your review and approval.</small>
+                </div>
+              ) : (
+                <div className="client-add-money-list">
+                  {additionalMoneyRequests.map((reqItem) => {
+                    const isPending = reqItem.status === "pending" || reqItem.status === "payment_pending";
+
+                    return (
+                      <div className={`client-req-card ${isPending ? "is-pending-card" : ""} status-${reqItem.status}`} key={reqItem.id}>
+                        <div className="client-req-header">
+                          <div className="client-req-title-group">
+                            <span className="worker-badge">Worker: {booking.worker_name || "Assigned Worker"}</span>
+                            <h4>Requested Additional Amount: <strong style={{ color: "#0f172a" }}>+ ₹{Number(reqItem.requested_amount).toLocaleString("en-IN")}</strong></h4>
+                          </div>
+
+                          <span className={`client-req-status-badge badge-${reqItem.status}`}>
+                            {reqItem.status === "pending" && "Pending Your Review"}
+                            {reqItem.status === "payment_pending" && "Payment Pending"}
+                            {reqItem.status === "paid" && "Approved & Paid"}
+                            {reqItem.status === "rejected" && "Rejected"}
+                            {reqItem.status === "cancelled" && "Cancelled"}
+                          </span>
+                        </div>
+
+                        <div className="client-req-reason-box">
+                          <strong>Reason for Extra Work / Expense:</strong>
+                          <p>{reqItem.reason}</p>
+                        </div>
+
+                        <div className="client-req-bottom">
+                          <span className="client-req-date">
+                            Submitted on {new Date(reqItem.created_at).toLocaleString("en-IN", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })}
+                          </span>
+
+                          {/* ACTION BUTTONS FOR CLIENT */}
+                          {isPending && (
+                            <div className="client-req-actions">
+                              <button
+                                type="button"
+                                className="accept-pay-req-btn"
+                                onClick={() => openAcceptAndPayModal(reqItem)}
+                                disabled={actionReqId === reqItem.id}
+                              >
+                                <Check size={16} />
+                                Accept & Pay (₹{Number(reqItem.requested_amount).toLocaleString("en-IN")})
+                              </button>
+
+                              <button
+                                type="button"
+                                className="reject-req-btn"
+                                onClick={() => handleRejectAddMoney(reqItem.id)}
+                                disabled={actionReqId === reqItem.id}
+                              >
+                                <X size={16} />
+                                {actionReqId === reqItem.id ? "Rejecting..." : "Reject"}
+                              </button>
+                            </div>
+                          )}
+
+                          {reqItem.status === "paid" && reqItem.paid_at && (
+                            <div className="client-req-paid-tag">
+                              <CheckCircle size={15} color="#16a34a" />
+                              <span>Paid & added to total on {new Date(reqItem.paid_at).toLocaleDateString("en-IN")}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </section>
 
           {/* Sidebar */}
@@ -348,15 +690,29 @@ function ClientBookingDetails() {
             <div className="summary-card">
               <h3>Payment Summary</h3>
 
+              {/* ORIGINAL AGREED AMOUNT */}
               <div className="summary-row">
-                <span>Labour Rate</span>
-                <span>₹{booking.labour_cost || 0}</span>
+                <span>Original Agreed Amount</span>
+                <span>₹{Number(booking.original_agreed_amount || booking.labour_cost || 0).toLocaleString("en-IN")}</span>
               </div>
 
-              <div className="summary-row">
-                <span>Total Amount</span>
-                <strong className="total-price">
-                  ₹{booking.total_cost || 0}
+              {/* ADDITIONAL APPROVED & PAID */}
+              {additionalMoneyRequests.filter(r => r.status === "paid").length > 0 && (
+                <div className="summary-row" style={{ color: "#16a34a" }}>
+                  <span>Additional Approved</span>
+                  <span>+ ₹{additionalMoneyRequests
+                    .filter(r => r.status === "paid")
+                    .reduce((sum, r) => sum + Number(r.requested_amount), 0)
+                    .toLocaleString("en-IN")}
+                  </span>
+                </div>
+              )}
+
+              {/* CURRENT PROJECT TOTAL */}
+              <div className="summary-row total-row" style={{ borderTop: "2px solid #e2e8f0", paddingTop: "12px", marginTop: "8px" }}>
+                <span style={{ fontWeight: "700" }}>Current Project Total</span>
+                <strong className="total-price" style={{ color: "#2563eb", fontSize: "20px" }}>
+                  ₹{Number(booking.total_cost || 0).toLocaleString("en-IN")}
                 </strong>
               </div>
 
@@ -366,7 +722,7 @@ function ClientBookingDetails() {
                   onClick={() => navigate(`/client/payment/${booking.id}`)}
                 >
                   <CreditCard size={18} />
-                  Pay Now
+                  Pay Initial Booking
                 </button>
               )}
 
@@ -382,6 +738,123 @@ function ClientBookingDetails() {
           </aside>
         </div>
       </main>
+
+      {/* CLIENT ACCEPT & PAY MODAL FOR ADDITIONAL MONEY */}
+      {payModal.isOpen && payModal.request && (
+        <div
+          className="client-add-pay-modal-backdrop"
+          onClick={() => !payModal.processing && setPayModal((prev) => ({ ...prev, isOpen: false }))}
+        >
+          <div className="client-add-pay-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="add-pay-modal-header">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <CreditCard size={22} color="#2563eb" />
+                <h3>Accept & Pay Additional Amount</h3>
+              </div>
+              <button
+                type="button"
+                className="close-add-pay-modal"
+                onClick={() => !payModal.processing && setPayModal((prev) => ({ ...prev, isOpen: false }))}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="add-pay-modal-body">
+              {payModal.error && (
+                <div className="add-pay-modal-error">
+                  <AlertTriangle size={16} />
+                  <span>{payModal.error}</span>
+                </div>
+              )}
+
+              <div className="add-pay-summary-box">
+                <div className="add-pay-summary-row">
+                  <span>Project</span>
+                  <strong>#{booking.id} - {booking.service_name}</strong>
+                </div>
+                <div className="add-pay-summary-row">
+                  <span>Worker</span>
+                  <strong>{booking.worker_name || "Assigned Worker"}</strong>
+                </div>
+                <div className="add-pay-summary-row">
+                  <span>Current Project Total</span>
+                  <span>₹{Number(booking.total_cost || 0).toLocaleString("en-IN")}</span>
+                </div>
+                <div className="add-pay-summary-row" style={{ color: "#1e40af" }}>
+                  <span>Approved Additional Amount</span>
+                  <strong>+ ₹{Number(payModal.request.requested_amount).toLocaleString("en-IN")}</strong>
+                </div>
+                <div className="add-pay-summary-row new-total-highlight">
+                  <span>New Project Total After Payment</span>
+                  <strong>₹{(Number(booking.total_cost || 0) + Number(payModal.request.requested_amount)).toLocaleString("en-IN")}</strong>
+                </div>
+              </div>
+
+              <div className="add-pay-reason-callout">
+                <small>Worker's Reason for Request:</small>
+                <p>{payModal.request.reason}</p>
+              </div>
+
+              <div className="payment-method-options-group">
+                <label>Choose Payment Method:</label>
+
+                <div className="method-grid">
+                  <div
+                    className={`method-tile ${payModal.method === "online" ? "selected" : ""}`}
+                    onClick={() => setPayModal((prev) => ({ ...prev, method: "online" }))}
+                  >
+                    <CreditCard size={20} color="#2563eb" />
+                    <div>
+                      <strong>Pay Online (Razorpay)</strong>
+                      <small>Cards, UPI, Netbanking</small>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`method-tile ${payModal.method === "cash" ? "selected" : ""}`}
+                    onClick={() => setPayModal((prev) => ({ ...prev, method: "cash" }))}
+                  >
+                    <Banknote size={20} color="#16a34a" />
+                    <div>
+                      <strong>Cash Payment</strong>
+                      <small>Pay directly to worker on-site</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="safety-guarantee">
+                <ShieldCheck size={18} color="#16a34a" />
+                <span>Protected by HelpHub Payment Policy. Amount is recorded in official history.</span>
+              </div>
+            </div>
+
+            <div className="add-pay-modal-footer">
+              <button
+                type="button"
+                className="cancel-add-pay-btn"
+                onClick={() => setPayModal((prev) => ({ ...prev, isOpen: false }))}
+                disabled={payModal.processing}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="confirm-add-pay-btn"
+                onClick={handleExecuteAddMoneyPayment}
+                disabled={payModal.processing}
+              >
+                <CheckCircle size={16} />
+                {payModal.processing
+                  ? "Processing..."
+                  : `Pay ₹${Number(payModal.request.requested_amount).toLocaleString("en-IN")}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cancel Modal */}
       {showCancelModal && (

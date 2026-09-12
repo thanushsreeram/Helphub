@@ -8,15 +8,23 @@ const isLocalDb = /(^|localhost|127\.0\.0\.1|::1)(:|\/|$)/i.test(
 );
 const isCloudDb = Boolean(databaseUrl) && !isLocalDb;
 
+const configuredPoolMax = Number(process.env.DB_POOL_MAX);
+const defaultPoolMax = process.env.VERCEL ? 3 : 10;
+
 const poolConfig = {
   connectionString: databaseUrl,
-  max: Number(
-    process.env.DB_POOL_MAX ||
-      (process.env.VERCEL || process.env.NODE_ENV === "production" ? 10 : 20),
-  ),
+  // Keep each serverless instance small. A large pool per instance can exhaust
+  // the shared Postgres connection limit when traffic causes instances to scale.
+  max:
+    Number.isInteger(configuredPoolMax) && configuredPoolMax > 0
+      ? configuredPoolMax
+      : defaultPoolMax,
+  min: 0,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 15000, // 15 seconds to accommodate Render free-tier cold starts
+  connectionTimeoutMillis: 10000,
   statement_timeout: 15000,
+  query_timeout: 15000,
+  allowExitOnIdle: true,
 };
 
 if (isCloudDb || process.env.NODE_ENV === "production") {

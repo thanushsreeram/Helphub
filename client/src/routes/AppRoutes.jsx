@@ -29,6 +29,8 @@ import ClientBookings from "../pages/client/ClientBookings";
 import ClientPayment from "../pages/client/ClientPayment";
 import ClientBookingDetails from "../pages/client/ClientBookingDetails";
 import ClientReview from "../pages/client/ClientReview";
+import AppointmentForm from "../pages/client/AppointmentForm";
+import ClientAppointments from "../pages/client/ClientAppointments";
 
 // 404
 import NotFound from "../pages/NotFound";
@@ -97,6 +99,9 @@ function AppRoutes() {
           path="/client/bookings/:bookingId/review"
           element={<ClientReview />}
         />
+
+        <Route path="/client/appointment/:workerId" element={<AppointmentForm />} />
+        <Route path="/client/appointments" element={<ClientAppointments />} />
 
         <Route path="/client/browse-workers" element={<BrowseWorkers />} />
       </Route>

@@ -20,6 +20,8 @@ import workerRoutes from "./src/routes/workerRoutes.js";
 import bookingRoutes from "./src/routes/bookingRoutes.js";
 import paymentRoutes from "./src/routes/paymentRoutes.js";
 import reviewRoutes from "./src/routes/reviewRoutes.js";
+import appointmentRoutes from "./src/routes/appointmentRoutes.js";
+import additionalMoneyRoutes from "./src/routes/additionalMoneyRoutes.js";
 
 export function createApp() {
   const app = express();
@@ -57,6 +59,42 @@ export function createApp() {
   // 2. Response Compression (Reduces network payload bandwidth by up to 80%)
   app.use(compression());
 
+  // Protect the event loop and database pool under bursts. This is deliberately
+  // above the expected 100 simultaneous users, so normal traffic is served and
+  // only excess work is rejected quickly instead of making the server crash.
+  const maxConcurrentRequests = Number(process.env.MAX_CONCURRENT_REQUESTS) || 200;
+  let activeRequests = 0;
+
+  app.use((req, res, next) => {
+    if (activeRequests >= maxConcurrentRequests) {
+      res.setHeader("Retry-After", "1");
+      return res.status(503).json({
+        success: false,
+        message: "HelpHub is busy. Please retry in a moment.",
+      });
+    }
+
+    activeRequests += 1;
+    let completed = false;
+    const release = () => {
+      if (completed) return;
+      completed = true;
+      activeRequests = Math.max(0, activeRequests - 1);
+    };
+
+    res.once("finish", release);
+    res.once("close", release);
+    res.setTimeout(20000, () => {
+      if (!res.headersSent) {
+        res.status(503).json({
+          success: false,
+          message: "The request took too long. Please retry.",
+        });
+      }
+    });
+    return next();
+  });
+
   app.use((req, res, next) => {
     const requestId = crypto.randomUUID();
     const startedAt = process.hrtime.bigint();
@@ -64,6 +102,13 @@ export function createApp() {
 
     res.on("finish", () => {
       const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+      const shouldLogRequest =
+        process.env.REQUEST_LOGGING === "true" ||
+        res.statusCode >= 400 ||
+        durationMs >= 1000;
+
+      if (!shouldLogRequest) return;
+
       console.info(
         JSON.stringify({
           requestId,
@@ -122,7 +167,7 @@ export function createApp() {
         "❌ DB Auto-Init middleware error:",
         error.message || error,
       );
-      next(error);
+      return next(error);
     }
   });
 
@@ -164,6 +209,8 @@ export function createApp() {
   app.use("/api/bookings", bookingRoutes);
   app.use("/api/payments", paymentRoutes);
   app.use("/api/reviews", reviewRoutes);
+  app.use("/api/appointments", appointmentRoutes);
+  app.use("/api/additional-money", additionalMoneyRoutes);
 
   // Home & Health
   app.get("/", (req, res) => {
@@ -190,7 +237,12 @@ export function createApp() {
 
   // 7. Global Error Handler Middleware
   app.use((err, req, res, next) => {
-    const status = err.status || (err.type === "entity.too.large" ? 413 : 500);
+    const isDatabaseUnavailable =
+      ["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND", "EACCES", "57P01", "53300"].includes(
+        err.code,
+      );
+    const status =
+      err.status || (err.type === "entity.too.large" ? 413 : isDatabaseUnavailable ? 503 : 500);
 
     console.error(
       JSON.stringify({
@@ -208,6 +260,8 @@ export function createApp() {
       message:
         status === 413
           ? "Request body is too large"
+          : status === 503
+            ? "The service is temporarily busy. Please retry in a moment."
           : process.env.NODE_ENV === "production"
             ? "An unexpected server error occurred"
             : err.message || "An unexpected server error occurred",
@@ -277,5 +331,4 @@ process.on("unhandledRejection", (reason, promise) => {
     "reason:",
     reason,
   );
-  process.exit(1);
 });

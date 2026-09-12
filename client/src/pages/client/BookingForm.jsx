@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { MapPin, Navigation, Loader2, CheckCircle2 } from "lucide-react";
 import { API_URL } from "../../services/api";
 import LanguageSelector from "../../components/common/LanguageSelector";
 import "./BookingForm.css";
@@ -32,7 +33,91 @@ function BookingForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Live Location states
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [locationStatus, setLocationStatus] = useState("");
+  const [locationSuccess, setLocationSuccess] = useState(false);
+
   const token = localStorage.getItem("helphub_token");
+
+  // Fetch client's live location and reverse-geocode to address
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus("Geolocation is not supported by your browser");
+      setLocationSuccess(false);
+      return;
+    }
+
+    setDetectingLocation(true);
+    setLocationStatus("Getting your GPS coordinates...");
+    setLocationSuccess(false);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocationStatus("Resolving address details...");
+
+        try {
+          // Reverse geocoding using OpenStreetMap Nominatim
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+            {
+              headers: {
+                "Accept-Language": "en",
+              },
+            },
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const formatted =
+              data.display_name ||
+              [data.address?.road, data.address?.suburb, data.address?.city || data.address?.town, data.address?.state, data.address?.postcode]
+                .filter(Boolean)
+                .join(", ");
+
+            if (formatted) {
+              setLocation(formatted);
+              setLocationStatus("Current address detected accurately!");
+              setLocationSuccess(true);
+              return;
+            }
+          }
+
+          // Fallback to coordinates
+          setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          setLocationStatus("GPS coordinates captured!");
+          setLocationSuccess(true);
+        } catch (geoErr) {
+          console.warn("Reverse geocode failed, using coordinates:", geoErr);
+          setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          setLocationStatus("GPS coordinates captured!");
+          setLocationSuccess(true);
+        } finally {
+          setDetectingLocation(false);
+        }
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+        setDetectingLocation(false);
+        setLocationSuccess(false);
+        if (err.code === 1) {
+          setLocationStatus("Permission denied. Please allow location access in your browser.");
+        } else if (err.code === 2) {
+          setLocationStatus("Location unavailable. Please enter your address manually.");
+        } else if (err.code === 3) {
+          setLocationStatus("Location request timed out. Please try again.");
+        } else {
+          setLocationStatus("Could not detect location. Please type manually.");
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      },
+    );
+  };
 
   // Fetch worker + services + availability
   useEffect(() => {
@@ -460,16 +545,58 @@ function BookingForm() {
             </div>
 
             <div className="form-group">
-              <label>
-                Location <span>*</span>
-              </label>
+              <div className="location-label-row">
+                <label>
+                  Location <span>*</span>
+                </label>
+                <button
+                  type="button"
+                  className="use-live-location-btn"
+                  onClick={handleUseCurrentLocation}
+                  disabled={detectingLocation}
+                  title="Detect and fill your current GPS location"
+                >
+                  {detectingLocation ? (
+                    <>
+                      <Loader2 size={14} className="location-spin" />
+                      <span>Detecting location...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Navigation size={14} />
+                      <span>Use My Live Location</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               <textarea
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Enter complete job address..."
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                  if (locationStatus) setLocationStatus("");
+                }}
+                placeholder="Enter complete job address or click 'Use My Live Location' above..."
                 rows="3"
                 required
               />
+
+              {locationStatus && (
+                <div
+                  className={`location-feedback ${
+                    locationSuccess
+                      ? "location-feedback-success"
+                      : "location-feedback-warning"
+                  }`}
+                >
+                  {locationSuccess ? (
+                    <CheckCircle2 size={15} />
+                  ) : (
+                    <MapPin size={15} />
+                  )}
+                  <span>{locationStatus}</span>
+                </div>
+              )}
             </div>
           </section>
 

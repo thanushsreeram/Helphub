@@ -28,7 +28,7 @@
 | 🖼️ **Profile Photo Uploads** | Personalize your profile with custom photo uploads (file selection or web URL) with live image previews. |
 | 🗓️ **Flexible Schedule Scopes** | Set working availability by **Recurring Weekly**, **Specific Month Only**, or **Custom Date Ranges**. |
 | 📸 **Multi-Photo Reviews & Dual Ratings** | Clients attach job proof photos; workers rate client communication and experience. |
-| 🚀 **Anti-Crash & Load Scaling** | PostgreSQL connection pooling (`max: 50`), Node multi-core clustering, Gzip compression, and micro-caching for 100+ concurrent users. |
+| 🚀 **Anti-Crash & Load Scaling** | Bounded PostgreSQL pooling, Node multi-core clustering, gzip compression, caching, request timeouts, and overload protection for 100+ concurrent users. |
 | 🛡️ **Email Verification** | Secure authentication workflow via mandatory email verification links for both clients and workers. |
 
 ---
@@ -119,13 +119,14 @@ HelpHub eliminates the friction of managing separate accounts by supporting **Du
 
 ## ⚡ High-Concurrency & Anti-Crash Scaling
 
-HelpHub backend is hardened to handle 100+ concurrent requests simultaneously without server lag or crashes:
+HelpHub backend is hardened to serve 100 simultaneous users without server lag or crashes. Under a larger burst, it rejects only excess work with a short retry response instead of exhausting the server:
 
-- **PostgreSQL Pool Expansion (`max: 50`)**: Automatic idle connection cleanup and reconnect error handlers.
+- **Bounded PostgreSQL pooling**: 3 connections per serverless instance by default (10 for a standalone server), with automatic idle cleanup and query timeouts. `DB_POOL_MAX` can tune this for the database plan.
 - **Database Performance Indexing**: Composite indexes on `client_id`, `worker_id`, `booking_date`, and `reviewer_type`.
 - **Node Multi-Core Clustering**: Spawns parallel worker processes managed by Node's native `cluster` manager.
 - **HTTP Payload Compression**: Gzip compression reducing JSON response size by up to 80%.
 - **Response Caching**: In-memory micro-cache for static service catalogs.
+- **Overload guard**: Serves up to 200 active requests per instance by default. Above that, it returns HTTP 503 with a retry prompt rather than crashing. Set `MAX_CONCURRENT_REQUESTS` only after load testing the deployed database.
 
 ---
 

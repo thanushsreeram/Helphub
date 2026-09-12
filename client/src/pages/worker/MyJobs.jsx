@@ -13,12 +13,14 @@ import {
   ShieldAlert,
   RefreshCw,
   Star,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../services/api";
 import WorkerReviewModal from "../../components/reviews/WorkerReviewModal";
 import LanguageSelector from "../../components/common/LanguageSelector";
 import { handleLogoClick } from "../../utils/navigation";
+import { openGoogleMaps } from "../../utils/maps";
 import "./MyJobs.css";
 
 function MyJobs() {
@@ -288,13 +290,24 @@ function MyJobs() {
                 </div>
 
                 <div className="job-details">
-                  <div className="job-detail">
+                  <div className="job-detail job-detail-location">
                     <span className="detail-icon">
                       <MapPin size={18} />
                     </span>
-                    <div>
+                    <div className="job-detail-location-body">
                       <small>Location</small>
-                      <strong>{booking.location || "Not provided"}</strong>
+                      <strong title={booking.location}>{booking.location || "Not provided"}</strong>
+                      {booking.location && (
+                        <button
+                          type="button"
+                          className="myjobs-map-btn"
+                          onClick={(e) => openGoogleMaps(booking.location, e)}
+                          title="Open in Google Maps"
+                        >
+                          <ExternalLink size={12} />
+                          View on Map
+                        </button>
+                      )}
                     </div>
                   </div>
 

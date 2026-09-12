@@ -1,3 +1,5 @@
+import pool from "./database.js";
+
 let initDbPromise = null;
 
 export async function ensureDbInitialized() {
@@ -107,11 +109,30 @@ export async function initializeDatabase() {
         reviewer_type VARCHAR(20) DEFAULT 'client',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS appointments (
+        id SERIAL PRIMARY KEY,
+        client_id INT REFERENCES users(id) ON DELETE CASCADE,
+        worker_id INT REFERENCES worker_profiles(id) ON DELETE CASCADE,
+        service_id INT REFERENCES services(id) ON DELETE SET NULL,
+        appointment_date DATE NOT NULL,
+        appointment_time TIME NOT NULL,
+        location TEXT NOT NULL,
+        description TEXT,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Ensure columns exist on tables created in earlier schema versions
     await pool.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT DEFAULT NULL;
+      -- Existing accounts pre-date email verification, so retain their access
+      -- when upgrading the schema. New registrations use the false default.
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_email_verified BOOLEAN DEFAULT TRUE;
+      ALTER TABLE users ALTER COLUMN is_email_verified SET DEFAULT FALSE;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255);
       ALTER TABLE users ADD COLUMN IF NOT EXISTS client_rating NUMERIC(3, 2) DEFAULT 0.00;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS client_total_reviews INT DEFAULT 0;
       
@@ -122,6 +143,33 @@ export async function initializeDatabase() {
       ALTER TABLE worker_availability ADD COLUMN IF NOT EXISTS valid_month VARCHAR(7) DEFAULT NULL;
       ALTER TABLE worker_availability ADD COLUMN IF NOT EXISTS start_date DATE DEFAULT NULL;
       ALTER TABLE worker_availability ADD COLUMN IF NOT EXISTS end_date DATE DEFAULT NULL;
+
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS work_decision VARCHAR(50) DEFAULT NULL;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS agreed_amount NUMERIC(10, 2) DEFAULT NULL;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS agreed_notes TEXT DEFAULT NULL;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS booking_id INT REFERENCES bookings(id) ON DELETE SET NULL;
+
+      ALTER TABLE bookings ADD COLUMN IF NOT EXISTS original_agreed_amount NUMERIC(10, 2) DEFAULT NULL;
+      UPDATE bookings SET original_agreed_amount = total_cost WHERE original_agreed_amount IS NULL AND total_cost IS NOT NULL;
+
+      ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_booking_id_key;
+      ALTER TABLE payments DROP CONSTRAINT IF EXISTS unique_booking_payment;
+      ALTER TABLE payments DROP CONSTRAINT IF EXISTS unique_payment_booking;
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_type VARCHAR(50) DEFAULT 'initial';
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS additional_request_id INT DEFAULT NULL;
+
+      CREATE TABLE IF NOT EXISTS additional_money_requests (
+        id SERIAL PRIMARY KEY,
+        booking_id INT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+        worker_id INT NOT NULL REFERENCES worker_profiles(id) ON DELETE CASCADE,
+        client_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        requested_amount NUMERIC(10, 2) NOT NULL,
+        reason TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        payment_id INT REFERENCES payments(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Performance Indexes
@@ -135,6 +183,13 @@ export async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_reviews_worker_id ON reviews(worker_id);
       CREATE INDEX IF NOT EXISTS idx_reviews_client_id ON reviews(client_id);
       CREATE INDEX IF NOT EXISTS idx_reviews_booking_id ON reviews(booking_id);
+      CREATE INDEX IF NOT EXISTS idx_appointments_client_id ON appointments(client_id);
+      CREATE INDEX IF NOT EXISTS idx_appointments_worker_id ON appointments(worker_id);
+      CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+      CREATE INDEX IF NOT EXISTS idx_add_money_booking_id ON additional_money_requests(booking_id);
+      CREATE INDEX IF NOT EXISTS idx_add_money_client_id ON additional_money_requests(client_id);
+      CREATE INDEX IF NOT EXISTS idx_add_money_worker_id ON additional_money_requests(worker_id);
+      CREATE INDEX IF NOT EXISTS idx_add_money_status ON additional_money_requests(status);
     `);
 
     // Seed default services catalog if services table is empty
@@ -157,5 +212,8 @@ export async function initializeDatabase() {
     console.log("✅ Database schema initialization completed successfully!");
   } catch (error) {
     console.error("❌ Database initialization error:", error.message || error);
+    // Do not pretend startup succeeded. Doing so defers the real failure until
+    // login and makes it appear as an unexplained authentication error.
+    throw error;
   }
 }

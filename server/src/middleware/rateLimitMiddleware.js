@@ -1,8 +1,30 @@
 const createRateLimiter = ({ windowMs, maxRequests, message }) => {
   const requests = new Map();
+  let lastPrunedAt = 0;
+
+  const pruneExpiredEntries = (now) => {
+    // Run occasionally instead of on every request, and keep this in-memory
+    // fallback bounded so a stream of unique IPs cannot grow it forever.
+    if (now - lastPrunedAt < windowMs && requests.size < 10000) return;
+
+    for (const [key, timestamps] of requests) {
+      const recent = timestamps.filter((timestamp) => now - timestamp < windowMs);
+      if (recent.length === 0) {
+        requests.delete(key);
+      } else {
+        requests.set(key, recent);
+      }
+    }
+
+    while (requests.size > 10000) {
+      requests.delete(requests.keys().next().value);
+    }
+    lastPrunedAt = now;
+  };
 
   return (req, res, next) => {
     const now = Date.now();
+    pruneExpiredEntries(now);
     const key = req.ip || req.socket.remoteAddress || "unknown";
     const recentRequests = (requests.get(key) || []).filter(
       (timestamp) => now - timestamp < windowMs

@@ -12,6 +12,8 @@ import {
   Play,
   RefreshCw,
   AlertTriangle,
+  MapPin,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../services/api";
@@ -19,6 +21,7 @@ import HelpHubModal from "../../components/common/HelpHubModal";
 import LanguageSelector from "../../components/common/LanguageSelector";
 import { useLanguage } from "../../context/LanguageContext";
 import { handleLogoClick } from "../../utils/navigation";
+import { openGoogleMaps } from "../../utils/maps";
 import "./WorkerDashboard.css";
 
 function WorkerDashboard() {
@@ -26,6 +29,9 @@ function WorkerDashboard() {
   const { t } = useLanguage();
 
   const [bookings, setBookings] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
+  const [apptActionLoading, setApptActionLoading] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [message, setMessage] = useState("");
@@ -40,6 +46,16 @@ function WorkerDashboard() {
     variant: "primary",
     bookingId: null,
     action: "",
+  });
+
+  // WORK AGREEMENT MODAL STATE (Post-Appointment Work Decision)
+  const [agreementModal, setAgreementModal] = useState({
+    isOpen: false,
+    appointment: null,
+    agreedAmount: "",
+    agreedNotes: "",
+    submitting: false,
+    error: "",
   });
 
   const token = localStorage.getItem("helphub_token");
@@ -78,6 +94,208 @@ function WorkerDashboard() {
     }
   };
 
+  const fetchAppointments = async () => {
+    try {
+      setAppointmentsLoading(true);
+      const response = await fetch(`${API_URL}/api/appointments/worker`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setAppointments(data.appointments || []);
+        }
+      }
+    } catch (err) {
+      console.error("Fetch worker appointments error:", err);
+    } finally {
+      setAppointmentsLoading(false);
+    }
+  };
+
+  const handleAcceptAppointment = async (apptId) => {
+    try {
+      setApptActionLoading(`accept-${apptId}`);
+      setMessage("");
+      setError("");
+
+      const response = await fetch(
+        `${API_URL}/api/appointments/${apptId}/accept`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to accept appointment");
+      }
+
+      setMessage("Appointment accepted successfully! The client will see the updated status.");
+      await fetchAppointments();
+    } catch (err) {
+      console.error("Accept appointment error:", err);
+      setError(err.message || "Failed to accept appointment");
+    } finally {
+      setApptActionLoading(null);
+    }
+  };
+
+  const handleRejectAppointment = async (apptId) => {
+    if (!window.confirm("Are you sure you want to reject this appointment request?")) {
+      return;
+    }
+
+    try {
+      setApptActionLoading(`reject-${apptId}`);
+      setMessage("");
+      setError("");
+
+      const response = await fetch(
+        `${API_URL}/api/appointments/${apptId}/reject`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to reject appointment");
+      }
+
+      setMessage("Appointment request rejected.");
+      await fetchAppointments();
+    } catch (err) {
+      console.error("Reject appointment error:", err);
+      setError(err.message || "Failed to reject appointment");
+    } finally {
+      setApptActionLoading(null);
+    }
+  };
+
+  // POST-APPOINTMENT WORK DECISION: REFUSE WORK
+  const handleRefuseWork = async (apptId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to refuse this work? This decision means the project will NOT start and the client will be informed.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setApptActionLoading(`refuse-${apptId}`);
+      setMessage("");
+      setError("");
+
+      const response = await fetch(
+        `${API_URL}/api/appointments/${apptId}/work-decision`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ decision: "refused" }),
+        },
+      );
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to submit work refusal");
+      }
+
+      setMessage("Work decision recorded: Work Refused. Client has been notified.");
+      await fetchAppointments();
+    } catch (err) {
+      console.error("Refuse work error:", err);
+      setError(err.message || "Failed to refuse work");
+    } finally {
+      setApptActionLoading(null);
+    }
+  };
+
+  // POST-APPOINTMENT WORK DECISION: OPEN ACCEPT WORK MODAL
+  const openAcceptWorkModal = (appt) => {
+    setAgreementModal({
+      isOpen: true,
+      appointment: appt,
+      agreedAmount: "",
+      agreedNotes: appt.description ? `Based on consultation: ${appt.description}` : "",
+      submitting: false,
+      error: "",
+    });
+  };
+
+  // POST-APPOINTMENT WORK DECISION: SUBMIT ACCEPT WORK AGREEMENT
+  const submitAcceptWork = async (e) => {
+    e.preventDefault();
+    const appt = agreementModal.appointment;
+    if (!appt) return;
+
+    const amount = Number(agreementModal.agreedAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setAgreementModal((prev) => ({
+        ...prev,
+        error: "Please enter a valid positive agreed amount (₹)",
+      }));
+      return;
+    }
+
+    try {
+      setAgreementModal((prev) => ({ ...prev, submitting: true, error: "" }));
+
+      const response = await fetch(
+        `${API_URL}/api/appointments/${appt.id}/work-decision`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            decision: "accepted",
+            agreed_amount: amount,
+            agreed_notes: agreementModal.agreedNotes,
+          }),
+        },
+      );
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to submit work agreement");
+      }
+
+      setMessage(
+        `Work agreement created for ₹${amount}! The client must now pay the agreed amount to activate the project.`,
+      );
+      setAgreementModal({
+        isOpen: false,
+        appointment: null,
+        agreedAmount: "",
+        agreedNotes: "",
+        submitting: false,
+        error: "",
+      });
+      await fetchAppointments();
+    } catch (err) {
+      console.error("Accept work error:", err);
+      setAgreementModal((prev) => ({
+        ...prev,
+        submitting: false,
+        error: err.message || "Failed to submit work agreement",
+      }));
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -85,6 +303,7 @@ function WorkerDashboard() {
     }
 
     fetchBookings();
+    fetchAppointments();
   }, [token, navigate]);
 
   const handleLogout = () => {
@@ -411,6 +630,229 @@ function WorkerDashboard() {
           </div>
         </section>
 
+        {/* APPOINTMENT REQUESTS SECTION */}
+        <section className="appointments-section">
+          <div className="section-header">
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <CalendarDays size={22} color="#2563eb" />
+              <h2 style={{ margin: 0 }}>Appointment Requests</h2>
+            </div>
+            <span>{appointments.length} total requests</span>
+          </div>
+
+          {appointmentsLoading ? (
+            <p className="loading-text">Loading appointment requests...</p>
+          ) : appointments.length === 0 ? (
+            <div className="empty-state" style={{ padding: "30px 20px" }}>
+              <CalendarDays size={36} />
+              <h3>No appointment requests</h3>
+              <p>When clients request an initial consultation/meeting, it will appear here.</p>
+            </div>
+          ) : (
+            <div className="worker-appointment-list">
+              {appointments.map((appt) => (
+                <div className="worker-appointment-card" key={appt.id}>
+                  <div className="appt-card-top">
+                    <div className="appt-client-info">
+                      <div className="appt-client-avatar">
+                        {appt.client_avatar_url ? (
+                          <img src={appt.client_avatar_url} alt={appt.client_name} />
+                        ) : (
+                          <User size={18} />
+                        )}
+                      </div>
+                      <div>
+                        <h3>{appt.client_name}</h3>
+                        {appt.service_name && <p className="appt-service">{appt.service_name}</p>}
+                      </div>
+                    </div>
+
+                    <span className={`status status-${appt.status}`}>
+                      {appt.status === "pending"
+                        ? "Pending Response"
+                        : appt.status.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="appt-details">
+                    <p>
+                      <CalendarDays size={14} />
+                      <span>
+                        <strong>Date:</strong>{" "}
+                        {new Date(appt.appointment_date).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </p>
+
+                    <p>
+                      <Clock size={14} />
+                      <span>
+                        <strong>Preferred Time:</strong> {appt.appointment_time?.slice(0, 5)}
+                      </span>
+                    </p>
+
+                    <p className="booking-location-row">
+                      <MapPin size={14} className="location-icon" />
+                      <span className="booking-location-text">
+                        <strong>Meeting Location:</strong> {appt.location}
+                      </span>
+                      {appt.location && (
+                        <button
+                          type="button"
+                          className="view-location-link-btn"
+                          onClick={(e) => openGoogleMaps(appt.location, e)}
+                          title="Open in Google Maps"
+                        >
+                          <ExternalLink size={12} />
+                          View on Map
+                        </button>
+                      )}
+                    </p>
+
+                    {appt.client_phone && (
+                      <p>
+                        <User size={14} />
+                        <span>
+                          <strong>Client Phone:</strong> {appt.client_phone}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+
+                  {appt.description && (
+                    <div className="booking-description">
+                      <strong>Client Note:</strong> {appt.description}
+                    </div>
+                  )}
+
+                  <div className="appt-card-actions">
+                    {appt.status === "pending" && (
+                      <div className="booking-actions" style={{ width: "100%" }}>
+                        <button
+                          className="accept-booking-button"
+                          onClick={() => handleAcceptAppointment(appt.id)}
+                          disabled={apptActionLoading === `accept-${appt.id}`}
+                        >
+                          <Check size={16} />
+                          {apptActionLoading === `accept-${appt.id}`
+                            ? "Accepting..."
+                            : "Accept Appointment"}
+                        </button>
+
+                        <button
+                          className="reject-booking-button"
+                          onClick={() => handleRejectAppointment(appt.id)}
+                          disabled={apptActionLoading === `reject-${appt.id}`}
+                        >
+                          <X size={16} />
+                          {apptActionLoading === `reject-${appt.id}`
+                            ? "Rejecting..."
+                            : "Reject"}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* STATUS: APPOINTMENT ACCEPTED (Meeting Confirmed - Worker must decide on actual work) */}
+                    {appt.status === "accepted" && (
+                      <div className="work-decision-box" style={{ width: "100%" }}>
+                        <div className="work-decision-header">
+                          <CheckCircle size={15} color="#16a34a" />
+                          <span>Appointment Accepted (Meeting Set)</span>
+                        </div>
+                        <p className="work-decision-instruction">
+                          <strong>After Meeting — Work Decision:</strong><br />
+                          Did you and the client agree to proceed with the actual work?
+                        </p>
+                        <div className="work-decision-buttons">
+                          <button
+                            type="button"
+                            className="accept-work-btn"
+                            onClick={() => openAcceptWorkModal(appt)}
+                            disabled={apptActionLoading === `refuse-${appt.id}`}
+                          >
+                            <Check size={16} />
+                            Accept Work
+                          </button>
+
+                          <button
+                            type="button"
+                            className="refuse-work-btn"
+                            onClick={() => handleRefuseWork(appt.id)}
+                            disabled={apptActionLoading === `refuse-${appt.id}`}
+                          >
+                            <X size={16} />
+                            {apptActionLoading === `refuse-${appt.id}` ? "Refusing..." : "Refuse Work"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* STATUS: PAYMENT PENDING (Worker accepted work, waiting for client initial payment) */}
+                    {appt.status === "payment_pending" && (
+                      <div className="work-agreement-pending-box" style={{ width: "100%" }}>
+                        <div className="agreement-badge-row">
+                          <Clock size={16} color="#d97706" />
+                          <strong>Agreement Set — Payment Pending</strong>
+                        </div>
+                        <div className="agreement-details-snippet">
+                          <span>Agreed Amount: <strong>₹{appt.agreed_amount}</strong></span>
+                          {appt.agreed_notes && <small>Notes: {appt.agreed_notes}</small>}
+                        </div>
+                        <p className="waiting-payment-text">
+                          Waiting for client to pay the agreed amount. Project will become ACTIVE once payment is complete.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* STATUS: WORK REFUSED */}
+                    {appt.status === "work_refused" && (
+                      <div className="work-refused-label" style={{ width: "100%" }}>
+                        <X size={16} />
+                        Work Refused (No project created)
+                      </div>
+                    )}
+
+                    {/* STATUS: PROJECT ACTIVE */}
+                    {appt.status === "project_active" && (
+                      <div className="project-active-box" style={{ width: "100%" }}>
+                        <div className="project-active-badge">
+                          <CheckCircle size={16} />
+                          Project ACTIVE
+                        </div>
+                        <span className="project-agreed-amount">Agreed: ₹{appt.agreed_amount}</span>
+                        {appt.booking_id && (
+                          <button
+                            type="button"
+                            className="view-active-job-btn"
+                            onClick={() => navigate(`/worker/jobs/${appt.booking_id}`)}
+                          >
+                            View Job Details
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {appt.status === "rejected" && (
+                      <div className="status status-rejected" style={{ width: "100%", textAlign: "center", padding: "8px" }}>
+                        Appointment Rejected
+                      </div>
+                    )}
+
+                    {appt.status === "cancelled" && (
+                      <div className="status status-cancelled" style={{ width: "100%", textAlign: "center", padding: "8px" }}>
+                        Cancelled by Client
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         {/* BOOKINGS */}
         <section className="bookings-section">
           <div className="section-header">
@@ -450,11 +892,22 @@ function WorkerDashboard() {
       </span>
     </p>
 
-    <p>
-      <Wrench size={14} />
-      <span>
-        <strong>Location:</strong> {booking.location}
+    <p className="booking-location-row">
+      <MapPin size={14} className="location-icon" />
+      <span className="booking-location-text">
+        <strong>Job Location:</strong> {booking.location || "Not provided"}
       </span>
+      {booking.location && (
+        <button
+          type="button"
+          className="view-location-link-btn"
+          onClick={(e) => openGoogleMaps(booking.location, e)}
+          title="Open in Google Maps"
+        >
+          <ExternalLink size={12} />
+          View on Map
+        </button>
+      )}
     </p>
 
     <p>
@@ -596,6 +1049,15 @@ function WorkerDashboard() {
             ? "Starting..."
             : "Start Job"}
         </button>
+
+        <button
+          type="button"
+          className="view-job-button"
+          style={{ padding: "8px 12px", fontSize: "13px" }}
+          onClick={() => navigate(`/worker/jobs/${booking.id}`)}
+        >
+          Manage Job
+        </button>
       </div>
     )}
 
@@ -627,6 +1089,15 @@ function WorkerDashboard() {
             ? "Completing..."
             : "Complete Job"}
         </button>
+
+        <button
+          type="button"
+          className="view-job-button"
+          style={{ padding: "8px 12px", fontSize: "13px" }}
+          onClick={() => navigate(`/worker/jobs/${booking.id}`)}
+        >
+          Manage Job
+        </button>
       </div>
     )}
 
@@ -644,6 +1115,125 @@ function WorkerDashboard() {
           )}
         </section>
       </main>
+
+      {/* WORK AGREEMENT MODAL (Post-Appointment Work Decision: Accept Work) */}
+      {agreementModal.isOpen && agreementModal.appointment && (
+        <div className="agreement-modal-backdrop" onClick={() => !agreementModal.submitting && setAgreementModal((prev) => ({ ...prev, isOpen: false }))}>
+          <div className="agreement-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="agreement-modal-header">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <CheckCircle size={22} color="#16a34a" />
+                <h3>Work Agreement & Pricing</h3>
+              </div>
+              <button
+                type="button"
+                className="close-modal-btn"
+                onClick={() => !agreementModal.submitting && setAgreementModal((prev) => ({ ...prev, isOpen: false }))}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={submitAcceptWork}>
+              <div className="agreement-modal-body">
+                <p className="agreement-notice">
+                  You are agreeing to take this job for <strong>{agreementModal.appointment.client_name}</strong>.
+                  Please establish the actual agreed project price and work details discussed during your meeting.
+                </p>
+
+                {agreementModal.error && (
+                  <div className="agreement-modal-error">
+                    <AlertTriangle size={16} />
+                    <span>{agreementModal.error}</span>
+                  </div>
+                )}
+
+                <div className="agreement-prefill-grid">
+                  <div>
+                    <label>Client</label>
+                    <p>{agreementModal.appointment.client_name}</p>
+                  </div>
+                  <div>
+                    <label>Service</label>
+                    <p>{agreementModal.appointment.service_name || "General Service"}</p>
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label>Location</label>
+                    <p>{agreementModal.appointment.location}</p>
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginTop: "16px" }}>
+                  <label htmlFor="agreed-amount-input">
+                    Agreed Project Amount (₹) <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <div className="amount-input-wrapper">
+                    <span className="currency-prefix">₹</span>
+                    <input
+                      id="agreed-amount-input"
+                      type="number"
+                      min="1"
+                      step="any"
+                      placeholder="e.g. 1500"
+                      value={agreementModal.agreedAmount}
+                      onChange={(e) =>
+                        setAgreementModal((prev) => ({
+                          ...prev,
+                          agreedAmount: e.target.value,
+                          error: "",
+                        }))
+                      }
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <small style={{ color: "#64748b", marginTop: "4px", display: "block" }}>
+                    The client will pay this exact amount to activate the project.
+                  </small>
+                </div>
+
+                <div className="form-group" style={{ marginTop: "16px" }}>
+                  <label htmlFor="agreed-notes-input">
+                    Agreed Work Details / Materials Scope
+                  </label>
+                  <textarea
+                    id="agreed-notes-input"
+                    rows={3}
+                    placeholder="Specify agreed tasks, materials provided by client/worker, completion timeline..."
+                    value={agreementModal.agreedNotes}
+                    onChange={(e) =>
+                      setAgreementModal((prev) => ({
+                        ...prev,
+                        agreedNotes: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="agreement-modal-footer">
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => setAgreementModal((prev) => ({ ...prev, isOpen: false }))}
+                  disabled={agreementModal.submitting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="confirm-agreement-btn"
+                  disabled={agreementModal.submitting}
+                >
+                  <Check size={16} />
+                  {agreementModal.submitting ? "Submitting Agreement..." : "Submit Agreement"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

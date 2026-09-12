@@ -319,6 +319,18 @@ function WorkerDetails() {
 
           <div className="hero-action-box">
             <button
+              type="button"
+              className="request-appointment-btn"
+              onClick={() =>
+                navigate(`/client/appointment/${worker.worker_id}`)
+              }
+              title="Request an in-person meeting/consultation to discuss the work"
+            >
+              <CalendarDays size={18} />
+              Request Appointment
+            </button>
+
+            <button
               className="book-now-button"
               onClick={() =>
                 navigate(`/client/book/${worker.worker_id}`)
